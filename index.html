@@ -83,7 +83,6 @@
                 <h1 class="text-lg font-black tracking-tight text-slate-800">隨手記帳本</h1>
             </div>
             <div class="flex items-center gap-1">
-                <!-- 雲端同步狀態快捷按鈕 -->
                 <button onclick="quickUpload()" class="p-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors group relative" id="cloud-status-btn" title="雲端同步狀態">
                     <i id="cloud-status-icon" class="fa-solid fa-cloud text-slate-300 text-lg transition-colors"></i>
                 </button>
@@ -108,24 +107,12 @@
 
             <div class="w-full space-y-8">
                 <div class="grid grid-cols-3 gap-3">
-                    <button onclick="setPersonCount(1)" data-count="1" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group">
-                        <span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">1人</span>
-                    </button>
-                    <button onclick="setPersonCount(2)" data-count="2" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group">
-                        <span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">2人</span>
-                    </button>
-                    <button onclick="setPersonCount(3)" data-count="3" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group">
-                        <span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">3人</span>
-                    </button>
-                    <button onclick="setPersonCount(4)" data-count="4" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group">
-                        <span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">4人</span>
-                    </button>
-                    <button onclick="setPersonCount(5)" data-count="5" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group">
-                        <span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">5人</span>
-                    </button>
-                    <button onclick="setPersonCount(6)" data-count="6" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group">
-                        <span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">6人</span>
-                    </button>
+                    <button onclick="setPersonCount(1)" data-count="1" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group"><span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">1人</span></button>
+                    <button onclick="setPersonCount(2)" data-count="2" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group"><span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">2人</span></button>
+                    <button onclick="setPersonCount(3)" data-count="3" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group"><span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">3人</span></button>
+                    <button onclick="setPersonCount(4)" data-count="4" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group"><span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">4人</span></button>
+                    <button onclick="setPersonCount(5)" data-count="5" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group"><span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">5人</span></button>
+                    <button onclick="setPersonCount(6)" data-count="6" class="setup-count-btn p-5 border-2 border-slate-100 rounded-2xl hover:border-indigo-500 transition-all bg-white group"><span class="block text-xl font-black text-slate-300 group-hover:text-indigo-600">6人</span></button>
                 </div>
 
                 <div id="nickname-inputs" class="space-y-4 hidden animate-[fadeIn_0.5s]">
@@ -139,13 +126,20 @@
 
         <!-- Main View -->
         <section id="view-main" class="view flex-col space-y-6">
-            <div class="bg-indigo-600 p-6 rounded-[2rem] shadow-xl shadow-indigo-100 flex items-center justify-between mt-2">
+            
+            <!-- 公費餘額儀表板 (支援多幣別橫向滑動) -->
+            <div id="dashboard-public-fund-container" class="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide mt-2 pb-2">
+                <!-- JS 動態生成不同幣別的卡片 -->
+            </div>
+
+            <!-- 篩選器與總覽標題 -->
+            <div class="flex items-center justify-between mt-2 px-1">
                 <div>
-                    <p class="text-[10px] text-indigo-200 font-black uppercase tracking-widest mb-1">目前篩選</p>
-                    <p id="current-day-label" class="text-2xl font-black text-white">全部明細</p>
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">目前篩選</p>
+                    <p id="current-day-label" class="text-2xl font-black text-slate-800">全部明細</p>
                 </div>
-                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                    <i class="fa-solid fa-layer-group text-white text-xl"></i>
+                <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+                    <i class="fa-solid fa-layer-group text-slate-400"></i>
                 </div>
             </div>
 
@@ -174,7 +168,7 @@
             </div>
 
             <div id="records-container" class="space-y-6"></div>
-            <div id="empty-state" class="hidden flex-col items-center justify-center py-20 text-center space-y-4">
+            <div id="empty-state" class="hidden flex-col items-center justify-center py-10 text-center space-y-4">
                 <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
                     <i class="fa-solid fa-receipt text-4xl text-slate-300"></i>
                 </div>
@@ -188,17 +182,23 @@
                 <button onclick="showView('main')" class="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm">
                     <i class="fa-solid fa-chevron-left text-indigo-600"></i>
                 </button>
-                <h2 id="add-view-title" class="text-xl font-black text-slate-800">新增消費</h2>
+                <h2 id="add-view-title" class="text-xl font-black text-slate-800">新增紀錄</h2>
                 <div id="edit-indicator" class="hidden px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full">編輯中</div>
             </div>
 
             <div class="card p-6 space-y-6">
+                <!-- 新增：收支切換開關 -->
+                <div class="flex p-1 bg-slate-100 rounded-xl">
+                    <button onclick="setFlowType('expense')" id="flow-expense" class="flex-1 py-2.5 text-sm font-black rounded-lg bg-white shadow-sm text-rose-600 transition-all">支出</button>
+                    <button onclick="setFlowType('income')" id="flow-income" class="flex-1 py-2.5 text-sm font-black rounded-lg text-slate-400 hover:text-slate-600 transition-all">收入</button>
+                </div>
+
                 <div class="flex justify-between items-start">
                     <div class="space-y-1 w-full">
                         <label class="text-[10px] font-black text-slate-300 uppercase tracking-widest block">總金額</label>
                         <div class="flex items-baseline gap-1">
-                            <span id="amount-currency-symbol" class="text-3xl font-black text-indigo-400">$</span>
-                            <div id="amount-display" class="text-5xl font-black text-indigo-600 tabular-nums overflow-hidden text-ellipsis flex-1">0</div>
+                            <span id="amount-currency-symbol" class="text-3xl font-black text-rose-300">$</span>
+                            <div id="amount-display" class="text-5xl font-black text-rose-500 tabular-nums overflow-hidden text-ellipsis flex-1">0</div>
                         </div>
                     </div>
                     <div class="shrink-0 relative mt-1">
@@ -218,11 +218,11 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <label class="text-[10px] font-black text-slate-300 uppercase tracking-widest">消費日期</label>
+                        <label class="text-[10px] font-black text-slate-300 uppercase tracking-widest">日期</label>
                         <input type="date" id="item-date" class="w-full py-3 text-sm font-bold border-b-2 border-slate-50 focus:border-indigo-100 transition-all text-slate-700 bg-transparent">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[10px] font-black text-slate-300 uppercase tracking-widest">消費項目</label>
+                        <label class="text-[10px] font-black text-slate-300 uppercase tracking-widest">項目名稱</label>
                         <input type="text" id="item-title" placeholder="例如：餐點..." class="w-full py-3 text-sm font-bold border-b-2 border-slate-50 focus:border-indigo-100 transition-all">
                     </div>
                 </div>
@@ -233,23 +233,27 @@
                     <button onclick="setExpenseType('custom')" id="type-custom" class="py-3 rounded-xl font-black text-xs transition-all">個別</button>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="setPayMethod('cash')" id="pay-cash" class="py-4 rounded-2xl border-2 font-black text-xs flex items-center justify-center gap-2">
+                <!-- 更新：付款方式新增公費 -->
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setPayMethod('cash')" id="pay-cash" class="py-4 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center gap-1.5">
                         <i class="fa-solid fa-coins text-lg"></i> 現金
                     </button>
-                    <button onclick="setPayMethod('credit')" id="pay-credit" class="py-4 rounded-2xl border-2 font-black text-xs flex items-center justify-center gap-2">
+                    <button onclick="setPayMethod('credit')" id="pay-credit" class="py-4 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center gap-1.5">
                         <i class="fa-solid fa-credit-card text-lg"></i> 信用卡
+                    </button>
+                    <button onclick="setPayMethod('public')" id="pay-public" class="py-4 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-piggy-bank text-lg"></i> 公費
                     </button>
                 </div>
 
                 <div class="space-y-3">
-                    <label class="text-[10px] font-black text-slate-300 uppercase tracking-widest">是誰先墊款的？</label>
+                    <label class="text-[10px] font-black text-slate-300 uppercase tracking-widest" id="payer-label">是誰處理這筆款項的？</label>
                     <div id="payer-grid" class="flex flex-wrap gap-2"></div>
                 </div>
 
                 <div id="split-info" class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl hidden">
                     <div class="flex justify-between items-center">
-                        <span class="text-indigo-600 text-xs font-black uppercase tracking-wider">每位夥伴應攤提</span>
+                        <span class="text-indigo-600 text-xs font-black uppercase tracking-wider">每位夥伴金額</span>
                         <div class="flex items-baseline gap-1">
                             <span class="amount-currency-symbol-small text-indigo-400 text-sm font-bold">$</span>
                             <span id="avg-amount" class="text-indigo-700 font-black text-2xl">0</span>
@@ -259,7 +263,7 @@
 
                 <div id="custom-split-container" class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl hidden flex-col gap-3">
                     <div class="flex justify-between items-center">
-                        <span class="text-indigo-600 text-xs font-black uppercase tracking-wider">各人應付金額設定</span>
+                        <span class="text-indigo-600 text-xs font-black uppercase tracking-wider">各人設定</span>
                         <span id="custom-split-diff" class="text-[10px] px-2 py-1 rounded font-bold bg-white text-slate-500 shadow-sm border border-slate-100">差額: 0</span>
                     </div>
                     <div id="custom-split-inputs" class="space-y-2"></div>
@@ -284,7 +288,7 @@
             </div>
         </section>
 
-        <!-- Settings View (已更新：根據截圖改為 帳號/儲存庫/Token 三欄位) -->
+        <!-- Settings View -->
         <section id="view-settings" class="view flex-col space-y-6">
             <div class="flex items-center justify-between pt-2 mb-2">
                 <div class="flex items-center gap-2">
@@ -299,7 +303,6 @@
                 </div>
             </div>
 
-            <!-- GitHub 雲端備份區塊 (對應截圖介面) -->
             <div class="bg-[#f4f7fc] border border-blue-100 rounded-2xl p-5 shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2 text-blue-700 font-bold">
@@ -309,12 +312,10 @@
                     <i class="fa-solid fa-eye-slash text-blue-400 text-sm cursor-pointer hover:text-blue-600 transition-colors" onclick="toggleTokenVisibility()"></i>
                 </div>
                 <div class="space-y-3">
-                    <!-- 第一列：帳號與儲存庫 -->
                     <div class="grid grid-cols-2 gap-3">
                         <input type="text" id="gh-owner" placeholder="GitHub 帳號" class="w-full bg-white text-sm font-medium p-3 rounded-xl border border-blue-100 focus:border-blue-400 transition-all outline-none">
                         <input type="text" id="gh-repo" placeholder="儲存庫名稱" class="w-full bg-white text-sm font-medium p-3 rounded-xl border border-blue-100 focus:border-blue-400 transition-all outline-none">
                     </div>
-                    <!-- 第二列：Token (支援全域帶入) -->
                     <input type="password" id="gh-token" placeholder="GitHub Token (ghp_...)" class="w-full bg-white text-sm font-medium p-3 rounded-xl border border-blue-100 focus:border-blue-400 transition-all outline-none">
                     
                     <button onclick="saveGitHubConfig()" class="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-md shadow-blue-200 active:scale-[0.98] transition-all hover:bg-blue-700">
@@ -332,7 +333,6 @@
                 </div>
             </div>
 
-            <!-- 本機手動 JSON -->
             <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 shadow-sm">
                 <div class="flex items-center gap-2 text-slate-700 font-bold mb-4">
                     <i class="fa-solid fa-server"></i>
@@ -386,29 +386,27 @@
     </div>
 
     <script>
-        // 註冊 Service Worker (PWA 核心)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('[Service Worker] 註冊成功, Scope:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('[Service Worker] 註冊失敗:', error);
-                    });
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed', err));
             });
         }
 
-        const APP_VERSION = '0.0.2';
+        const APP_VERSION = '0.0.3';
         let pendingModalAction = null;
 
         // --- Core Application State ---
-        let state = { people: [], records: [], currentAmount: '0', currentType: 'single', currentPayMethod: 'cash', currentPayerId: null, currentCurrency: 'TWD', customSplits: {}, editingId: null, selectedDay: 'all', selectedMemberId: null };
+        // 新增 currentFlowType 支援收支分類
+        let state = { 
+            people: [], records: [], currentAmount: '0', 
+            currentFlowType: 'expense', currentType: 'single', currentPayMethod: 'cash', 
+            currentPayerId: null, currentCurrency: 'TWD', customSplits: {}, editingId: null, 
+            selectedDay: 'all', selectedMemberId: null 
+        };
         let syncConfig = { owner: '', repo: '', token: '' };
         let hasAutoDownloaded = false; 
         let hasUnsyncedChanges = false; 
 
-        // --- GitHub API Helpers ---
         const FILE_PATH = 'travel_split_data.json';
 
         window.onload = async () => {
@@ -416,11 +414,9 @@
             loadLocalState();
             loadSyncConfig();
             
-            // 自動帶入全域 Token
             const globalToken = localStorage.getItem('gh_token_global');
             if (globalToken && !syncConfig.token) syncConfig.token = globalToken;
 
-            // 啟動時自動下載
             if (syncConfig.owner && syncConfig.repo && syncConfig.token && !hasAutoDownloaded) {
                 hasAutoDownloaded = true;
                 await downloadFromGitHub(true); 
@@ -431,165 +427,76 @@
         function initApp() {
             if (state.people.length > 0) { showView('main'); toggleNav(true); } else { showView('setup'); toggleNav(false); }
             document.getElementById('split-toggle-container').style.display = state.people.length <= 1 ? 'none' : 'grid';
-            updateSummary(); renderDays(); renderRecords(); renderMemberSummary(); updateCloudStatusUI();
+            updateSummary(); renderDays(); renderRecords(); renderMemberSummary(); updateCloudStatusUI(); updatePublicFundDashboard();
         }
 
-        // --- GitHub Repo Sync Logic (取代 Gist) ---
+        // --- GitHub Repo Sync Logic ---
         async function downloadFromGitHub(isAuto = false) {
             const { owner, repo, token } = syncConfig;
             if (!owner || !repo || !token) return;
 
             try {
                 const url = `https://api.github.com/repos/${owner}/${repo}/contents/${FILE_PATH}`;
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-                });
-
-                if (response.status === 404) {
-                    if (!isAuto) showCustomModal('alert', '雲端尚未建立備份檔案，請先執行「上傳覆蓋」。');
-                    return;
-                }
-
+                const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json' } });
+                if (response.status === 404) { if (!isAuto) showCustomModal('alert', '雲端尚未建立備份檔案，請先執行「上傳覆蓋」。'); return; }
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
                 const data = await response.json();
                 const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
-                
                 if (content && content.people) {
                     state.people = content.people;
                     state.records = content.records;
-                    saveLocalState(true); // 從雲端載入，標記為已同步
-                    if (!isAuto) {
-                        showCustomModal('success', '資料已從 GitHub 儲存庫同步成功。');
-                        initApp();
-                    }
+                    saveLocalState(true);
+                    if (!isAuto) { showCustomModal('success', '資料已從 GitHub 儲存庫同步成功。'); initApp(); }
                 }
-            } catch (error) {
-                if (!isAuto) showCustomModal('alert', `下載失敗：\n${error.message}`);
-            }
+            } catch (error) { if (!isAuto) showCustomModal('alert', `下載失敗：\n${error.message}`); }
         }
 
         async function uploadToGitHub(isQuickAction = false) {
             const { owner, repo, token } = syncConfig;
-            if (!owner || !repo || !token) {
-                showView('settings');
-                showCustomModal('alert', '請先完成 GitHub 雲端備份設定。');
-                return;
-            }
-
-            const exportData = { 
-                version: APP_VERSION, 
-                timestamp: new Date().toISOString(), 
-                people: state.people, 
-                records: state.records 
-            };
-
+            if (!owner || !repo || !token) { showView('settings'); showCustomModal('alert', '請先完成 GitHub 雲端備份設定。'); return; }
+            const exportData = { version: APP_VERSION, timestamp: new Date().toISOString(), people: state.people, records: state.records };
             const url = `https://api.github.com/repos/${owner}/${repo}/contents/${FILE_PATH}`;
-            const utf8Content = unescape(encodeURIComponent(JSON.stringify(exportData, null, 2)));
-            const base64Content = btoa(utf8Content);
+            const base64Content = btoa(unescape(encodeURIComponent(JSON.stringify(exportData, null, 2))));
 
             try {
-                // 1. 先獲取目前的 SHA (Repository 更新檔案必須提供 SHA)
                 let currentSha = null;
-                const getRes = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (getRes.ok) {
-                    const getData = await getRes.json();
-                    currentSha = getData.sha;
-                }
-
-                // 2. PUT 寫入檔案
-                const payload = {
-                    message: "Sync from Travel Split App",
-                    content: base64Content,
-                    sha: currentSha
-                };
-
-                const putRes = await fetch(url, {
-                    method: 'PUT',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
+                const getRes = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (getRes.ok) currentSha = (await getRes.json()).sha;
+                const putRes = await fetch(url, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: "Sync from Travel Split App", content: base64Content, sha: currentSha }) });
                 if (!putRes.ok) throw new Error(`PUT Error ${putRes.status}`);
-
-                hasUnsyncedChanges = false;
-                saveSyncStatus();
-                updateCloudStatusUI();
+                hasUnsyncedChanges = false; saveSyncStatus(); updateCloudStatusUI();
                 showCustomModal('success', '資料已成功上傳並覆蓋雲端儲存庫。', null, '同步完成');
-            } catch (error) {
-                showCustomModal('alert', `上傳失敗：\n${error.message}`);
-            }
+            } catch (error) { showCustomModal('alert', `上傳失敗：\n${error.message}`); }
         }
 
-        async function quickUpload() {
-            await uploadToGitHub(true);
-        }
+        async function quickUpload() { await uploadToGitHub(true); }
 
         // --- Settings Helpers ---
         function saveGitHubConfig() {
-    const owner = document.getElementById('gh-owner').value.trim();
-    const repo = document.getElementById('gh-repo').value.trim();
-    const token = document.getElementById('gh-token').value.trim();
-
-    // 新增邏輯：允許將三個欄位清空以解除雲端綁定
-    if (!owner && !repo && !token) {
-        syncConfig = { owner: '', repo: '', token: '' };
-        saveSyncStatus();
-        updateCloudStatusUI();
-        showCustomModal('success', '雲端綁定已成功解除。');
-        return;
-    }
-
-    if (!owner || !repo || !token) {
-        showCustomModal('alert', '請輸入完整的帳號、儲存庫與 Token，或將三者皆清空以解除綁定。');
-        return;
-    }
-
-    syncConfig = { owner, repo, token };
-    saveSyncStatus();
-    updateCloudStatusUI();
-    showCustomModal('success', '連接設定已儲存。\nToken 已同步至共享區供其他 App 使用。');
-}
+            const owner = document.getElementById('gh-owner').value.trim(), repo = document.getElementById('gh-repo').value.trim(), token = document.getElementById('gh-token').value.trim();
+            if (!owner && !repo && !token) { syncConfig = { owner: '', repo: '', token: '' }; saveSyncStatus(); updateCloudStatusUI(); showCustomModal('success', '雲端綁定已成功解除。'); return; }
+            if (!owner || !repo || !token) { showCustomModal('alert', '請輸入完整的帳號、儲存庫與 Token，或將三者皆清空以解除綁定。'); return; }
+            syncConfig = { owner, repo, token }; saveSyncStatus(); updateCloudStatusUI(); showCustomModal('success', '連接設定已儲存。\nToken 已同步至共享區。');
+        }
 
         function loadSyncConfig() {
             const saved = localStorage.getItem('travel_split_sync_config');
             const globalToken = localStorage.getItem('gh_token_global');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                syncConfig.owner = parsed.owner || '';
-                syncConfig.repo = parsed.repo || '';
-                syncConfig.token = parsed.token || globalToken || '';
-                hasUnsyncedChanges = parsed.hasUnsyncedChanges || false;
-            } else if (globalToken) {
-                syncConfig.token = globalToken;
-            }
+            if (saved) { const parsed = JSON.parse(saved); syncConfig.owner = parsed.owner || ''; syncConfig.repo = parsed.repo || ''; syncConfig.token = parsed.token || globalToken || ''; hasUnsyncedChanges = parsed.hasUnsyncedChanges || false; } 
+            else if (globalToken) { syncConfig.token = globalToken; }
         }
 
         function saveSyncStatus() {
-            localStorage.setItem('travel_split_sync_config', JSON.stringify({ 
-                ...syncConfig, hasUnsyncedChanges 
-            }));
+            localStorage.setItem('travel_split_sync_config', JSON.stringify({ ...syncConfig, hasUnsyncedChanges }));
             if (syncConfig.token) localStorage.setItem('gh_token_global', syncConfig.token);
         }
 
         function updateCloudStatusUI() {
-            const icon = document.getElementById('cloud-status-icon');
-            if (!icon) return;
-            icon.classList.remove('fa-cloud', 'fa-cloud-arrow-up', 'text-slate-300', 'text-amber-500', 'text-emerald-500');
-            if (!syncConfig.token || !syncConfig.owner) icon.classList.add('fa-cloud', 'text-slate-300');
-            else if (hasUnsyncedChanges) icon.classList.add('fa-cloud-arrow-up', 'text-amber-500');
-            else icon.classList.add('fa-cloud', 'text-emerald-500');
+            const icon = document.getElementById('cloud-status-icon'); if (!icon) return;
+            icon.className = 'fa-solid text-lg transition-colors ' + (!syncConfig.token || !syncConfig.owner ? 'fa-cloud text-slate-300' : (hasUnsyncedChanges ? 'fa-cloud-arrow-up text-amber-500' : 'fa-cloud text-emerald-500'));
         }
 
-        function toggleTokenVisibility() {
-            const input = document.getElementById('gh-token');
-            input.type = input.type === 'password' ? 'text' : 'password';
-        }
+        function toggleTokenVisibility() { const input = document.getElementById('gh-token'); input.type = input.type === 'password' ? 'text' : 'password'; }
 
         // --- View & Navigation ---
         function showView(viewId) {
@@ -599,35 +506,21 @@
             const activeNav = document.getElementById(`nav-${viewId}`);
             if (activeNav) activeNav.querySelectorAll('i, span').forEach(el => el.classList.add('text-indigo-600'));
             
-            if (viewId === 'main') { state.editingId = null; renderDays(); renderRecords(); updateSummary(); renderMemberSummary(); }
+            if (viewId === 'main') { state.editingId = null; renderDays(); renderRecords(); updateSummary(); renderMemberSummary(); updatePublicFundDashboard(); }
             else if (viewId === 'add') resetAddForm();
-            else if (viewId === 'settings') {
-                document.getElementById('gh-owner').value = syncConfig.owner || '';
-                document.getElementById('gh-repo').value = syncConfig.repo || '';
-                document.getElementById('gh-token').value = syncConfig.token || '';
-            }
+            else if (viewId === 'settings') { document.getElementById('gh-owner').value = syncConfig.owner || ''; document.getElementById('gh-repo').value = syncConfig.repo || ''; document.getElementById('gh-token').value = syncConfig.token || ''; }
             window.scrollTo(0,0);
         }
 
-        function toggleNav(show) {
-            document.getElementById('app-header').style.display = show ? 'block' : 'none';
-            document.getElementById('app-footer').style.display = show ? 'block' : 'none';
-        }
+        function toggleNav(show) { document.getElementById('app-header').style.display = show ? 'block' : 'none'; document.getElementById('app-footer').style.display = show ? 'block' : 'none'; }
 
         // --- Setup Logic ---
         function setPersonCount(count) {
-            document.querySelectorAll('.setup-count-btn').forEach(btn => {
-                btn.classList.remove('border-indigo-600', 'bg-indigo-50');
-                btn.querySelector('span').classList.replace('text-indigo-600', 'text-slate-300');
-            });
+            document.querySelectorAll('.setup-count-btn').forEach(btn => { btn.classList.remove('border-indigo-600', 'bg-indigo-50'); btn.querySelector('span').classList.replace('text-indigo-600', 'text-slate-300'); });
             const activeBtn = document.querySelector(`.setup-count-btn[data-count="${count}"]`);
-            activeBtn.classList.add('border-indigo-600', 'bg-indigo-50');
-            activeBtn.querySelector('span').classList.replace('text-slate-300', 'text-indigo-600');
-            const container = document.getElementById('name-container');
-            container.innerHTML = '';
-            for (let i = 1; i <= count; i++) {
-                container.innerHTML += `<div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm"><input type="text" placeholder="夥伴暱稱 ${i}" class="nickname-input w-full font-bold text-center text-sm" data-id="${i-1}"></div>`;
-            }
+            activeBtn.classList.add('border-indigo-600', 'bg-indigo-50'); activeBtn.querySelector('span').classList.replace('text-slate-300', 'text-indigo-600');
+            const container = document.getElementById('name-container'); container.innerHTML = '';
+            for (let i = 1; i <= count; i++) container.innerHTML += `<div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm"><input type="text" placeholder="夥伴暱稱 ${i}" class="nickname-input w-full font-bold text-center text-sm" data-id="${i-1}"></div>`;
             document.getElementById('nickname-inputs').classList.remove('hidden');
         }
 
@@ -638,36 +531,17 @@
         }
 
         function resetApp() {
-    showCustomModal('confirm', '確定要重新開始並清除本機的所有紀錄與雲端綁定設定嗎？', () => { 
-        // 1. 清除記帳本機資料
-        localStorage.removeItem('travel_split_state'); 
-        // 2. 同步清除雲端綁定設定，防止 reload 後自動下載舊資料
-        localStorage.removeItem('travel_split_sync_config');
-        // 3. 重新載入頁面，順利回到「選擇人數」的初始畫面
-        location.reload(); 
-    });
-}
-
-        function formatDisplayDate(dateStr) {
-            const d = new Date(dateStr);
-            return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+            showCustomModal('confirm', '確定要重新開始並清除本機的所有紀錄與雲端綁定設定嗎？', () => { 
+                localStorage.removeItem('travel_split_state'); localStorage.removeItem('travel_split_sync_config'); location.reload(); 
+            });
         }
 
-        function getTodayForInput() {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
-
-        function formatDateForInput(dateStr) {
-            const d = new Date(dateStr);
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
-
-        // --- Currency Helpers ---
-        function getCurrencySymbol(code) {
-            const symbols = { 'TWD': '$', 'JPY': '¥', 'KRW': '₩', 'HKD': 'HK$', 'USD': 'US$', 'CNY': 'CN¥' };
-            return symbols[code] || '$';
-        }
+        // --- Date & Currency Helpers ---
+        function formatTabDate(dateStr, isSameYear, earliestDate) { const d = new Date(dateStr); return (isSameYear && dateStr !== earliestDate) ? `${d.getMonth()+1}/${d.getDate()}` : `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`; }
+        function formatDisplayDate(dateStr) { const d = new Date(dateStr); return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`; }
+        function getTodayForInput() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+        function formatDateForInput(dateStr) { const d = new Date(dateStr); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+        function getCurrencySymbol(code) { return { 'TWD': '$', 'JPY': '¥', 'KRW': '₩', 'HKD': 'HK$', 'USD': 'US$', 'CNY': 'CN¥' }[code] || '$'; }
 
         function updateCurrencySymbol() {
             const sym = getCurrencySymbol(document.getElementById('currency-select').value);
@@ -676,7 +550,78 @@
             renderCustomSplitInputs();
         }
 
-        // --- Data Logic ---
+        // --- Dashboard Logic ---
+        function updatePublicFundDashboard() {
+            const container = document.getElementById('dashboard-public-fund-container');
+            let pfData = {};
+            
+            // 1. 依據幣別分組加總公費紀錄
+            state.records.forEach(r => {
+                if (r.payMethod === 'public') {
+                    const curr = r.currency || 'TWD';
+                    if (!pfData[curr]) pfData[curr] = { income: 0, expense: 0 };
+                    
+                    if (r.flowType === 'income') pfData[curr].income += r.amount;
+                    else pfData[curr].expense += r.amount; // default is expense
+                }
+            });
+            
+            // 2. 若無任何公費紀錄，預設顯示 TWD 空卡片
+            if (Object.keys(pfData).length === 0) {
+                pfData['TWD'] = { income: 0, expense: 0 };
+            }
+            
+            // 3. 動態渲染多幣別卡片
+            let html = '';
+            const currencyCount = Object.keys(pfData).length;
+            
+            for (const [curr, data] of Object.entries(pfData)) {
+                const balance = data.income - data.expense;
+                // 若有多張卡片，寬度縮至 90% 提示可滑動；單張則佔滿 100%
+                const widthClass = currencyCount > 1 ? 'min-w-[90%]' : 'min-w-full';
+                
+                html += `
+                <div class="${widthClass} bg-indigo-600 rounded-[1.75rem] p-6 text-white shadow-xl shadow-indigo-200 relative overflow-hidden shrink-0 snap-center transition-all">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold tracking-wider opacity-90 mt-1">${curr}</span>
+                            ${currencyCount > 1 ? '<span class="px-2 py-0.5 bg-white/20 rounded-full text-[10px] font-black tracking-widest mt-1 animate-pulse">滑動切換</span>' : ''}
+                        </div>
+                        <div class="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
+                            <i class="fa-solid fa-coins text-white/90 text-lg"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <p class="text-sm font-medium text-white/80 mb-1">公費結餘</p>
+                        <h3 class="text-5xl font-black tabular-nums tracking-tight">${balance.toLocaleString()}</h3>
+                    </div>
+                    
+                    <div class="h-[1px] w-full bg-white/20 mb-4"></div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="flex items-center gap-1.5 mb-1 opacity-80">
+                                <span class="text-[13px] font-bold">↙</span>
+                                <span class="text-xs font-medium">公費收入</span>
+                            </div>
+                            <p class="text-xl font-bold tabular-nums">${data.income.toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5 mb-1 opacity-80">
+                                <span class="text-[13px] font-bold">↗</span>
+                                <span class="text-xs font-medium">公費支出</span>
+                            </div>
+                            <p class="text-xl font-bold tabular-nums">${data.expense.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // --- Data Display Logic ---
         function setSelectedDay(date) { state.selectedDay = date; state.selectedMemberId = null; renderDays(); renderMemberSummary(); renderRecords(); updateSummary(); }
 
         function toggleMemberFilter(memberId) {
@@ -690,12 +635,9 @@
             const datesAsc = [...new Set(state.records.map(r => r.date))].sort((a,b) => new Date(a) - new Date(b));
             if (datesAsc.length === 0) { container.innerHTML = `<button onclick="setSelectedDay('all')" class="day-tab active">全部明細</button>`; return; }
             const isSameYear = datesAsc.map(d => new Date(d).getFullYear()).every((y,i,arr) => y === arr[0]);
-            const earliestDate = datesAsc[0];
-            const displayDates = [...datesAsc].reverse();
             let html = `<button onclick="setSelectedDay('all')" class="day-tab ${state.selectedDay === 'all' && !state.selectedMemberId ? 'active' : 'inactive'}">全部明細</button>`;
-            displayDates.forEach(date => {
-                const label = formatTabDate(date, isSameYear, earliestDate);
-                html += `<button onclick="setSelectedDay('${date}')" class="day-tab ${state.selectedDay === date && !state.selectedMemberId ? 'active' : 'inactive'}">${label}</button>`;
+            [...datesAsc].reverse().forEach(date => {
+                html += `<button onclick="setSelectedDay('${date}')" class="day-tab ${state.selectedDay === date && !state.selectedMemberId ? 'active' : 'inactive'}">${formatTabDate(date, isSameYear, datesAsc[0])}</button>`;
             });
             container.innerHTML = html;
         }
@@ -706,14 +648,16 @@
             container.classList.remove('hidden');
             let totals = {}; state.people.forEach(p => totals[p.id] = 0);
             state.records.forEach(r => {
-                if (r.type === 'single') totals[r.payerId] += r.amount;
-                else if (r.type === 'multi') { const per = r.amount / state.people.length; state.people.forEach(p => totals[p.id] += per); }
-                else if (r.type === 'custom' && r.customSplits) Object.entries(r.customSplits).forEach(([pid, amt]) => totals[pid] += amt);
+                // 如果是公費支出，這裡計算成員負擔可能因人而異。目前先維持舊邏輯（記在payer身上或均分）
+                const flowMultiplier = r.flowType === 'income' ? -1 : 1; // 收入視為貢獻(減少需付金額)
+                if (r.type === 'single' && r.payerId) totals[r.payerId] += (r.amount * flowMultiplier);
+                else if (r.type === 'multi') { const per = (r.amount * flowMultiplier) / state.people.length; state.people.forEach(p => totals[p.id] += per); }
+                else if (r.type === 'custom' && r.customSplits) Object.entries(r.customSplits).forEach(([pid, amt]) => totals[pid] += (amt * flowMultiplier));
             });
             let optionsHtml = `<option value="all">所有成員明細</option>`;
             state.people.forEach(p => {
                 const formattedAmt = Number.isInteger(totals[p.id]) ? totals[p.id].toLocaleString() : totals[p.id].toLocaleString(undefined, {minimumFractionDigits: 2});
-                optionsHtml += `<option value="${p.id}" ${state.selectedMemberId === p.id ? 'selected' : ''}>${p.name} (累計花費: ${formattedAmt})</option>`;
+                optionsHtml += `<option value="${p.id}" ${state.selectedMemberId === p.id ? 'selected' : ''}>${p.name} (結算: ${formattedAmt})</option>`;
             });
             select.innerHTML = optionsHtml;
         }
@@ -733,14 +677,18 @@
             if (filtered.length === 0) { container.innerHTML = ''; empty.classList.remove('hidden'); return; }
             empty.classList.add('hidden');
             const groups = filtered.reduce((acc, r) => { (acc[r.date] = acc[r.date] || []).push(r); return acc; }, {});
-            const sortedDates = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a));
-            container.innerHTML = sortedDates.map(date => {
-                const recs = groups[date];
+            
+            container.innerHTML = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a)).map(date => {
                 return `<div class="mb-6"><div class="flex items-baseline gap-2 mb-3 px-1"><span class="text-2xl font-bold text-gray-800">${formatDisplayDate(date)}</span><span class="text-sm font-medium text-gray-400">${['週日','週一','週二','週三','週四','週五','週六'][new Date(date).getDay()]}</span></div><div class="space-y-3">` + 
-                recs.map(r => {
+                groups[date].map(r => {
+                    const isIncome = r.flowType === 'income';
+                    const colorVal = isIncome ? 'emerald' : 'rose';
                     const sym = getCurrencySymbol(r.currency || 'TWD');
                     const isShared = (r.type === 'multi' || r.type === 'custom') && state.people.length > 1;
-                    return `<div class="bg-white rounded-[1.25rem] shadow-sm border border-gray-100 p-4"><div class="flex items-center justify-between"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0"><i class="fa-solid fa-arrow-trend-down text-red-400 text-lg"></i></div><div><div class="flex items-center gap-2 mb-0.5"><h4 class="font-bold text-gray-800 text-base">${r.title}</h4><span class="text-[10px] font-bold px-2 py-0.5 rounded ${r.payMethod === 'cash' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">${r.payMethod === 'cash' ? '現金' : '刷卡'}</span></div><div class="text-xs text-gray-400">${isShared ? `${state.people.find(p=>p.id==r.payerId)?.name} 先付` : `個人花費`}</div></div></div><div class="text-right text-xl font-medium text-rose-500">${sym}${r.amount.toLocaleString()}</div></div>` +
+                    const payMethodName = r.payMethod === 'cash' ? '現金' : (r.payMethod === 'credit' ? '刷卡' : '公費');
+                    const payMethodColor = r.payMethod === 'cash' ? 'bg-amber-100 text-amber-700' : (r.payMethod === 'credit' ? 'bg-blue-100 text-blue-700' : 'bg-indigo-100 text-indigo-700');
+
+                    return `<div class="bg-white rounded-[1.25rem] shadow-sm border border-gray-100 p-4"><div class="flex items-center justify-between"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-${colorVal}-50 flex items-center justify-center shrink-0"><i class="fa-solid ${isIncome ? 'fa-arrow-down' : 'fa-arrow-up'} text-${colorVal}-400 text-lg"></i></div><div><div class="flex items-center gap-2 mb-0.5"><h4 class="font-bold text-gray-800 text-base">${r.title}</h4><span class="text-[10px] font-bold px-2 py-0.5 rounded ${payMethodColor}">${payMethodName}</span></div><div class="text-xs text-gray-400">${r.payMethod === 'public' ? '公費款項' : (isShared ? `${state.people.find(p=>p.id==r.payerId)?.name} 負責` : `個人紀錄`)}</div></div></div><div class="text-right text-xl font-medium text-${colorVal}-500">${isIncome?'+':''}${sym}${r.amount.toLocaleString()}</div></div>` +
                     (isShared ? `<div class="mt-4 pt-3 border-t border-gray-50 flex flex-wrap gap-1.5">${state.people.filter(p=>p.id!=r.payerId).map(p=>{ if(r.type==='custom' && (!r.customSplits||!r.customSplits[p.id])) return ''; const ok = r.settledIds?.includes(p.id); return `<button onclick="toggleSettled(${r.id},'${p.id}')" class="px-2 py-1 rounded text-[10px] font-bold ${ok?'bg-emerald-500 text-white':'bg-gray-100 text-gray-400'}">${p.name}${ok?'✓':''}</button>`;}).join('')}</div>` : '') +
                     `<div class="flex justify-end gap-3 mt-3 pt-2"><button onclick="editRecord(${r.id})" class="text-[11px] font-bold text-gray-400 hover:text-indigo-500"><i class="fa-solid fa-pen"></i></button><button onclick="deleteRecord(${r.id})" class="text-[11px] font-bold text-gray-400 hover:text-rose-500"><i class="fa-solid fa-trash"></i></button></div></div>`;
                 }).join('') + `</div></div>`;
@@ -751,15 +699,43 @@
         function resetAddForm() {
             if (state.editingId) {
                 const r = state.records.find(rec => rec.id === state.editingId);
-                state.currentAmount = r.amount.toString(); state.currentType = r.type; state.currentPayMethod = r.payMethod; state.currentPayerId = r.payerId; state.customSplits = r.customSplits || {};
-                document.getElementById('item-title').value = r.title; document.getElementById('item-date').value = formatDateForInput(r.date);
+                state.currentAmount = r.amount.toString(); 
+                state.currentFlowType = r.flowType || 'expense'; 
+                state.currentType = r.type; 
+                state.currentPayMethod = r.payMethod || 'cash'; 
+                state.currentPayerId = r.payerId; 
+                state.customSplits = r.customSplits || {};
+                document.getElementById('item-title').value = r.title; 
+                document.getElementById('item-date').value = formatDateForInput(r.date);
                 document.getElementById('currency-select').value = r.currency || 'TWD';
             } else {
-                state.currentAmount = '0'; state.currentType = state.people.length > 1 ? 'multi' : 'single'; state.currentPayMethod = 'cash'; state.currentPayerId = state.people[0]?.id; state.customSplits = {};
-                document.getElementById('item-title').value = ''; document.getElementById('item-date').value = getTodayForInput();
+                state.currentAmount = '0'; 
+                state.currentFlowType = 'expense'; 
+                state.currentType = state.people.length > 1 ? 'multi' : 'single'; 
+                state.currentPayMethod = 'cash'; 
+                state.currentPayerId = state.people[0]?.id; 
+                state.customSplits = {};
+                document.getElementById('item-title').value = ''; 
+                document.getElementById('item-date').value = getTodayForInput();
                 document.getElementById('currency-select').value = 'TWD';
             }
-            updateCurrencySymbol(); setExpenseType(state.currentType); setPayMethod(state.currentPayMethod); renderPayerGrid(); updateAmountDisplay();
+            updateCurrencySymbol(); 
+            setFlowType(state.currentFlowType);
+            setExpenseType(state.currentType); 
+            setPayMethod(state.currentPayMethod); 
+            renderPayerGrid(); 
+            updateAmountDisplay();
+        }
+
+        // 新增收支切換邏輯
+        function setFlowType(type) {
+            state.currentFlowType = type;
+            const isExp = type === 'expense';
+            document.getElementById('flow-expense').className = isExp ? 'flex-1 py-2.5 text-sm font-black rounded-lg bg-white shadow-sm text-rose-600 transition-all' : 'flex-1 py-2.5 text-sm font-black rounded-lg text-slate-400 hover:text-slate-600 transition-all';
+            document.getElementById('flow-income').className = !isExp ? 'flex-1 py-2.5 text-sm font-black rounded-lg bg-white shadow-sm text-emerald-600 transition-all' : 'flex-1 py-2.5 text-sm font-black rounded-lg text-slate-400 hover:text-slate-600 transition-all';
+            
+            document.getElementById('amount-display').className = isExp ? 'text-5xl font-black text-rose-500 tabular-nums overflow-hidden text-ellipsis flex-1' : 'text-5xl font-black text-emerald-500 tabular-nums overflow-hidden text-ellipsis flex-1';
+            document.getElementById('amount-currency-symbol').className = isExp ? 'text-3xl font-black text-rose-300' : 'text-3xl font-black text-emerald-300';
         }
 
         function updateAmountDisplay() {
@@ -780,8 +756,7 @@
         function setExpenseType(t) {
             state.currentType = t;
             ['single','multi','custom'].forEach(id => {
-                const btn = document.getElementById('type-'+id);
-                btn.className = (t === id ? 'py-3 rounded-xl font-black text-xs transition-all bg-white shadow-sm text-indigo-600' : 'py-3 rounded-xl font-black text-xs transition-all text-slate-400');
+                document.getElementById('type-'+id).className = (t === id ? 'py-3 rounded-xl font-black text-xs transition-all bg-white shadow-sm text-indigo-600' : 'py-3 rounded-xl font-black text-xs transition-all text-slate-400');
             });
             document.getElementById('split-info').style.display = t === 'multi' ? 'block' : 'none';
             document.getElementById('custom-split-container').style.display = t === 'custom' ? 'flex' : 'none';
@@ -791,8 +766,9 @@
         function renderCustomSplitInputs() {
             const container = document.getElementById('custom-split-inputs'); container.innerHTML = '';
             const sym = getCurrencySymbol(document.getElementById('currency-select').value);
+            const colorClass = state.currentFlowType === 'income' ? 'text-emerald-600' : 'text-rose-600';
             state.people.forEach(p => {
-                container.innerHTML += `<div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-100"><span class="text-sm font-bold text-slate-700 pl-2">${p.name}</span><div class="flex items-center gap-1"><span class="text-slate-300 font-bold">${sym}</span><input type="number" value="${state.customSplits[p.id]||''}" oninput="state.customSplits['${p.id}']=parseFloat(this.value)||0;calculateCustomDiff()" class="w-24 bg-slate-50 p-1.5 rounded-lg text-right font-black text-indigo-600"></div></div>`;
+                container.innerHTML += `<div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-100"><span class="text-sm font-bold text-slate-700 pl-2">${p.name}</span><div class="flex items-center gap-1"><span class="text-slate-300 font-bold">${sym}</span><input type="number" value="${state.customSplits[p.id]||''}" oninput="state.customSplits['${p.id}']=parseFloat(this.value)||0;calculateCustomDiff()" class="w-24 bg-slate-50 p-1.5 rounded-lg text-right font-black ${colorClass}"></div></div>`;
             });
             calculateCustomDiff();
         }
@@ -808,8 +784,9 @@
 
         function setPayMethod(m) {
             state.currentPayMethod = m;
-            document.getElementById('pay-cash').className = m === 'cash' ? 'py-4 rounded-2xl border-2 font-black text-xs flex items-center justify-center gap-2 border-amber-200 bg-amber-50 text-amber-600' : 'py-4 rounded-2xl border-2 font-black text-xs flex items-center justify-center gap-2 border-slate-50 text-slate-400 bg-white';
-            document.getElementById('pay-credit').className = m === 'credit' ? 'py-4 rounded-2xl border-2 font-black text-xs flex items-center justify-center gap-2 border-emerald-200 bg-emerald-50 text-emerald-600' : 'py-4 rounded-2xl border-2 font-black text-xs flex items-center justify-center gap-2 border-slate-50 text-slate-400 bg-white';
+            document.getElementById('pay-cash').className = m === 'cash' ? 'py-4 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center gap-1.5 border-amber-200 bg-amber-50 text-amber-600 transition-all' : 'py-4 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center gap-1.5 border-slate-50 text-slate-400 bg-white transition-all';
+            document.getElementById('pay-credit').className = m === 'credit' ? 'py-4 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center gap-1.5 border-blue-200 bg-blue-50 text-blue-600 transition-all' : 'py-4 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center gap-1.5 border-slate-50 text-slate-400 bg-white transition-all';
+            document.getElementById('pay-public').className = m === 'public' ? 'py-4 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center gap-1.5 border-indigo-200 bg-indigo-50 text-indigo-600 transition-all' : 'py-4 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center gap-1.5 border-slate-50 text-slate-400 bg-white transition-all';
         }
 
         function renderPayerGrid() {
@@ -821,17 +798,15 @@
 
         function calcSave() {
             const dateInput = document.getElementById('item-date').value;
-            const title = document.getElementById('item-title').value.trim() || '未分類消費';
+            const title = document.getElementById('item-title').value.trim() || '未分類紀錄';
             const amount = parseFloat(state.currentAmount);
             if (!dateInput || amount <= 0) { showCustomModal('alert', '請輸入正確金額與日期'); return; }
             
-            const d = new Date(dateInput);
-            const dateStr = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
-            const currency = document.getElementById('currency-select').value;
-
             const record = {
                 id: state.editingId || Date.now(),
-                date: dateStr, title, amount, currency,
+                date: `${new Date(dateInput).getFullYear()}/${new Date(dateInput).getMonth()+1}/${new Date(dateInput).getDate()}`, 
+                title, amount, currency: document.getElementById('currency-select').value,
+                flowType: state.currentFlowType, // 儲存收入或支出狀態
                 type: state.currentType, payMethod: state.currentPayMethod, payerId: state.currentPayerId,
                 customSplits: state.currentType === 'custom' ? {...state.customSplits} : null,
                 settledIds: state.editingId ? state.records.find(r=>r.id===state.editingId).settledIds : []
@@ -843,15 +818,9 @@
             saveLocalState(false); showView('main');
         }
 
-        function deleteRecord(id) { showCustomModal('confirm', '確定要刪除嗎？', () => { state.records = state.records.filter(r=>r.id!==id); saveLocalState(false); renderRecords(); updateSummary(); renderMemberSummary(); }); }
+        function deleteRecord(id) { showCustomModal('confirm', '確定要刪除嗎？', () => { state.records = state.records.filter(r=>r.id!==id); saveLocalState(false); renderRecords(); updateSummary(); renderMemberSummary(); updatePublicFundDashboard(); }); }
         function editRecord(id) { state.editingId = id; showView('add'); }
-        function toggleSettled(recId, pId) { 
-            const r = state.records.find(rec=>rec.id===recId); 
-            r.settledIds = r.settledIds || [];
-            const idx = r.settledIds.indexOf(pId);
-            if (idx > -1) r.settledIds.splice(idx,1); else r.settledIds.push(pId);
-            saveLocalState(false); renderRecords(); 
-        }
+        function toggleSettled(recId, pId) { const r = state.records.find(rec=>rec.id===recId); r.settledIds = r.settledIds || []; const idx = r.settledIds.indexOf(pId); if (idx > -1) r.settledIds.splice(idx,1); else r.settledIds.push(pId); saveLocalState(false); renderRecords(); }
 
         // --- Utils ---
         function saveLocalState(isFromCloud = false) {
@@ -866,11 +835,8 @@
 
         function showCustomModal(type, msg, confirm = null, title = null) {
             const modal = document.getElementById('custom-modal'), panel = document.getElementById('custom-modal-panel');
-            document.getElementById('modal-message').innerText = msg;
-            document.getElementById('modal-title').innerText = title || '系統提示';
-            document.getElementById('modal-cancel').style.display = type === 'confirm' ? 'block' : 'none';
-            pendingModalAction = confirm;
-            modal.classList.remove('hidden'); modal.classList.add('flex');
+            document.getElementById('modal-message').innerText = msg; document.getElementById('modal-title').innerText = title || '系統提示'; document.getElementById('modal-cancel').style.display = type === 'confirm' ? 'block' : 'none';
+            pendingModalAction = confirm; modal.classList.remove('hidden'); modal.classList.add('flex');
             requestAnimationFrame(() => { modal.classList.remove('opacity-0'); panel.classList.remove('scale-95'); });
         }
 
@@ -881,18 +847,8 @@
         }
 
         function executeModalAction() { if (pendingModalAction) pendingModalAction(); closeCustomModal(); }
-
-        function exportLocalJSON() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-            const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "TravelSplit.json"); dl.click();
-        }
-
-        function importLocalJSON(event) {
-            const reader = new FileReader(); reader.onload = (e) => {
-                const p = JSON.parse(e.target.result);
-                if (p && p.people) { state = {...state, ...p}; saveLocalState(true); initApp(); }
-            }; reader.readAsText(event.target.files[0]);
-        }
+        function exportLocalJSON() { const dl = document.createElement('a'); dl.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2))); dl.setAttribute("download", "TravelSplit.json"); dl.click(); }
+        function importLocalJSON(event) { const reader = new FileReader(); reader.onload = (e) => { const p = JSON.parse(e.target.result); if (p && p.people) { state = {...state, ...p}; saveLocalState(true); initApp(); } }; reader.readAsText(event.target.files[0]); }
     </script>
 </body>
 </html>
