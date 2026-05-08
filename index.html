@@ -399,7 +399,7 @@
             });
         }
 
-        const APP_VERSION = '0.0.1';
+        const APP_VERSION = '0.0.2';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -532,20 +532,29 @@
 
         // --- Settings Helpers ---
         function saveGitHubConfig() {
-            const owner = document.getElementById('gh-owner').value.trim();
-            const repo = document.getElementById('gh-repo').value.trim();
-            const token = document.getElementById('gh-token').value.trim();
-            
-            if (!owner || !repo || !token) {
-                showCustomModal('alert', '請輸入完整的帳號、儲存庫與 Token。');
-                return;
-            }
-            
-            syncConfig = { owner, repo, token };
-            saveSyncStatus();
-            updateCloudStatusUI();
-            showCustomModal('success', '連接設定已儲存。\nToken 已同步至共享區供其他 App 使用。');
-        }
+    const owner = document.getElementById('gh-owner').value.trim();
+    const repo = document.getElementById('gh-repo').value.trim();
+    const token = document.getElementById('gh-token').value.trim();
+
+    // 新增邏輯：允許將三個欄位清空以解除雲端綁定
+    if (!owner && !repo && !token) {
+        syncConfig = { owner: '', repo: '', token: '' };
+        saveSyncStatus();
+        updateCloudStatusUI();
+        showCustomModal('success', '雲端綁定已成功解除。');
+        return;
+    }
+
+    if (!owner || !repo || !token) {
+        showCustomModal('alert', '請輸入完整的帳號、儲存庫與 Token，或將三者皆清空以解除綁定。');
+        return;
+    }
+
+    syncConfig = { owner, repo, token };
+    saveSyncStatus();
+    updateCloudStatusUI();
+    showCustomModal('success', '連接設定已儲存。\nToken 已同步至共享區供其他 App 使用。');
+}
 
         function loadSyncConfig() {
             const saved = localStorage.getItem('travel_split_sync_config');
@@ -629,15 +638,15 @@
         }
 
         function resetApp() {
-            showCustomModal('confirm', '確定要重新開始並清除本機資料嗎？', () => { localStorage.removeItem('travel_split_state'); location.reload(); });
-        }
-
-        // --- Date Formatters ---
-        function formatTabDate(dateStr, isSameYear, earliestDate) {
-            const d = new Date(dateStr);
-            if (isSameYear && dateStr !== earliestDate) return `${d.getMonth()+1}/${d.getDate()}`;
-            return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
-        }
+    showCustomModal('confirm', '確定要重新開始並清除本機的所有紀錄與雲端綁定設定嗎？', () => { 
+        // 1. 清除記帳本機資料
+        localStorage.removeItem('travel_split_state'); 
+        // 2. 同步清除雲端綁定設定，防止 reload 後自動下載舊資料
+        localStorage.removeItem('travel_split_sync_config');
+        // 3. 重新載入頁面，順利回到「選擇人數」的初始畫面
+        location.reload(); 
+    });
+}
 
         function formatDisplayDate(dateStr) {
             const d = new Date(dateStr);
