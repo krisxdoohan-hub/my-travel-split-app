@@ -571,48 +571,48 @@
                 pfData['TWD'] = { income: 0, expense: 0 };
             }
             
-            // 3. 動態渲染多幣別卡片 (已縮小整體比例)
+            // 3. 動態渲染多幣別卡片
             let html = '';
             const currencyCount = Object.keys(pfData).length;
             
             for (const [curr, data] of Object.entries(pfData)) {
                 const balance = data.income - data.expense;
-                // 將多幣別寬度縮小至 85% 讓卡片更緊湊
-                const widthClass = currencyCount > 1 ? 'min-w-[85%]' : 'min-w-full';
+                // 若有多張卡片，寬度縮至 90% 提示可滑動；單張則佔滿 100%
+                const widthClass = currencyCount > 1 ? 'min-w-[90%]' : 'min-w-full';
                 
                 html += `
-                <div class="${widthClass} bg-indigo-600 rounded-[1.5rem] p-4 text-white shadow-lg shadow-indigo-200 relative overflow-hidden shrink-0 snap-center transition-all">
-                    <div class="flex justify-between items-start mb-3">
+                <div class="${widthClass} bg-indigo-600 rounded-[1.75rem] p-6 text-white shadow-xl shadow-indigo-200 relative overflow-hidden shrink-0 snap-center transition-all">
+                    <div class="flex justify-between items-start mb-6">
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold tracking-wider opacity-90 mt-1">${curr}</span>
-                            ${currencyCount > 1 ? '<span class="px-2 py-0.5 bg-white/20 rounded-full text-[9px] font-black tracking-widest mt-1 animate-pulse">滑動切換</span>' : ''}
+                            <span class="text-sm font-bold tracking-wider opacity-90 mt-1">${curr}</span>
+                            ${currencyCount > 1 ? '<span class="px-2 py-0.5 bg-white/20 rounded-full text-[10px] font-black tracking-widest mt-1 animate-pulse">滑動切換</span>' : ''}
                         </div>
-                        <div class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
-                            <i class="fa-solid fa-coins text-white/90 text-sm"></i>
+                        <div class="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
+                            <i class="fa-solid fa-coins text-white/90 text-lg"></i>
                         </div>
                     </div>
                     
-                    <div class="mb-4">
-                        <p class="text-xs font-medium text-white/80 mb-0.5">公費結餘</p>
-                        <h3 class="text-4xl font-black tabular-nums tracking-tight">${balance.toLocaleString()}</h3>
+                    <div class="mb-6">
+                        <p class="text-sm font-medium text-white/80 mb-1">公費結餘</p>
+                        <h3 class="text-5xl font-black tabular-nums tracking-tight">${balance.toLocaleString()}</h3>
                     </div>
                     
-                    <div class="h-[1px] w-full bg-white/20 mb-3"></div>
+                    <div class="h-[1px] w-full bg-white/20 mb-4"></div>
                     
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <div class="flex items-center gap-1 mb-0.5 opacity-80">
-                                <span class="text-[11px] font-bold">↙</span>
-                                <span class="text-[11px] font-medium">收入</span>
+                            <div class="flex items-center gap-1.5 mb-1 opacity-80">
+                                <span class="text-[13px] font-bold">↙</span>
+                                <span class="text-xs font-medium">公費收入</span>
                             </div>
-                            <p class="text-lg font-bold tabular-nums">${data.income.toLocaleString()}</p>
+                            <p class="text-xl font-bold tabular-nums">${data.income.toLocaleString()}</p>
                         </div>
                         <div>
-                            <div class="flex items-center gap-1 mb-0.5 opacity-80">
-                                <span class="text-[11px] font-bold">↗</span>
-                                <span class="text-[11px] font-medium">支出</span>
+                            <div class="flex items-center gap-1.5 mb-1 opacity-80">
+                                <span class="text-[13px] font-bold">↗</span>
+                                <span class="text-xs font-medium">公費支出</span>
                             </div>
-                            <p class="text-lg font-bold tabular-nums">${data.expense.toLocaleString()}</p>
+                            <p class="text-xl font-bold tabular-nums">${data.expense.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>`;
@@ -643,56 +643,61 @@
         }
 
         function renderMemberSummary() {
-    const container = document.getElementById('member-summary-container'), select = document.getElementById('member-filter-select');
-    if (state.people.length === 0 || state.records.length === 0) { container.classList.add('hidden'); return; }
-    container.classList.remove('hidden');
-    
-    // 初始化多幣別資料結構
-    let totals = {}; 
-    state.people.forEach(p => totals[p.id] = {});
-    
-    state.records.forEach(r => {
-        // 嚴格規定：僅計算支出，忽略收入
-        if (r.flowType === 'income') return;
-        
-        const curr = r.currency || 'TWD';
-        
-        // 依照單人、均分、個別拆帳計算各幣別金額
-        if (r.type === 'single' && r.payerId) {
-            totals[r.payerId][curr] = (totals[r.payerId][curr] || 0) + r.amount;
-        } else if (r.type === 'multi') {
-            const per = r.amount / state.people.length;
+            const container = document.getElementById('member-summary-container'), select = document.getElementById('member-filter-select');
+            if (state.people.length === 0 || state.records.length === 0) { container.classList.add('hidden'); return; }
+            container.classList.remove('hidden');
+            
+            // 初始化多幣別資料結構，改為紀錄結餘 (收入 - 支出)
+            let balances = {}; 
+            state.people.forEach(p => balances[p.id] = {});
+            
+            state.records.forEach(r => {
+                const curr = r.currency || 'TWD';
+                
+                // 處理收入：直接加到該收款/付款人的結餘中
+                if (r.flowType === 'income') {
+                    if (r.payerId) {
+                        balances[r.payerId][curr] = (balances[r.payerId][curr] || 0) + r.amount;
+                    }
+                    return; // 收入處理完畢，跳過後續拆帳計算
+                }
+                
+                // 處理支出：依照拆帳模式扣除金額
+                if (r.type === 'single' && r.payerId) {
+                    balances[r.payerId][curr] = (balances[r.payerId][curr] || 0) - r.amount;
+                } else if (r.type === 'multi') {
+                    const per = r.amount / state.people.length;
+                    state.people.forEach(p => {
+                        balances[p.id][curr] = (balances[p.id][curr] || 0) - per;
+                    });
+                } else if (r.type === 'custom' && r.customSplits) {
+                    Object.entries(r.customSplits).forEach(([pid, amt]) => {
+                        balances[pid][curr] = (balances[pid][curr] || 0) - amt;
+                    });
+                }
+            });
+            
+            let optionsHtml = `<option value="all">所有成員明細</option>`;
+            
             state.people.forEach(p => {
-                totals[p.id][curr] = (totals[p.id][curr] || 0) + per;
+                // 組合該成員的所有幣別結算字串
+                let displayTexts = [];
+                for (const [curr, amt] of Object.entries(balances[p.id])) {
+                    if (amt !== 0) { // 結餘不為 0 時顯示，包含負數
+                        const sym = getCurrencySymbol(curr);
+                        const formattedAmt = Number.isInteger(amt) ? amt.toLocaleString() : amt.toLocaleString(undefined, {minimumFractionDigits: 2});
+                        displayTexts.push(`${sym}${formattedAmt}`);
+                    }
+                }
+                
+                // 判斷是否有金額產生對應的顯示文案，將「支出」改為「結餘」
+                const summaryText = displayTexts.length > 0 ? `(結餘: ${displayTexts.join(', ')})` : `(無紀錄)`;
+                
+                optionsHtml += `<option value="${p.id}" ${state.selectedMemberId === p.id ? 'selected' : ''}>${p.name} ${summaryText}</option>`;
             });
-        } else if (r.type === 'custom' && r.customSplits) {
-            Object.entries(r.customSplits).forEach(([pid, amt]) => {
-                totals[pid][curr] = (totals[pid][curr] || 0) + amt;
-            });
+            
+            select.innerHTML = optionsHtml;
         }
-    });
-    
-    let optionsHtml = `<option value="all">所有成員明細</option>`;
-    
-    state.people.forEach(p => {
-        // 組合該成員的所有幣別結算字串
-        let displayTexts = [];
-        for (const [curr, amt] of Object.entries(totals[p.id])) {
-            if (amt > 0) {
-                const sym = getCurrencySymbol(curr);
-                const formattedAmt = Number.isInteger(amt) ? amt.toLocaleString() : amt.toLocaleString(undefined, {minimumFractionDigits: 2});
-                displayTexts.push(`${sym}${formattedAmt}`);
-            }
-        }
-        
-        // 判斷是否有金額產生對應的顯示文案
-        const summaryText = displayTexts.length > 0 ? `(支出: ${displayTexts.join(', ')})` : `(無支出)`;
-        
-        optionsHtml += `<option value="${p.id}" ${state.selectedMemberId === p.id ? 'selected' : ''}>${p.name} ${summaryText}</option>`;
-    });
-    
-    select.innerHTML = optionsHtml;
-}
 
         function updateSummary() {
             const label = document.getElementById('current-day-label');
