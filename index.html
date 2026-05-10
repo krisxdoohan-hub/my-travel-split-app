@@ -642,36 +642,43 @@
             container.innerHTML = html;
         }
 
-        function renderMemberSummary() {
+       function renderMemberSummary() {
             const container = document.getElementById('member-summary-container'), select = document.getElementById('member-filter-select');
             if (state.people.length === 0 || state.records.length === 0) { container.classList.add('hidden'); return; }
             container.classList.remove('hidden');
             
-            // 初始化多幣別資料結構，改為紀錄結餘 (收入 - 支出)
+            // 初始化多幣別資料結構，同時建立「支出 (expenses)」與「結餘 (balances)」兩個追蹤器
+            let expenses = {}; 
             let balances = {}; 
-            state.people.forEach(p => balances[p.id] = {});
+            state.people.forEach(p => {
+                expenses[p.id] = {};
+                balances[p.id] = {};
+            });
             
             state.records.forEach(r => {
                 const curr = r.currency || 'TWD';
                 
-                // 處理收入：直接加到該收款/付款人的結餘中
+                // 處理收入：只增加結餘，不列入支出
                 if (r.flowType === 'income') {
                     if (r.payerId) {
                         balances[r.payerId][curr] = (balances[r.payerId][curr] || 0) + r.amount;
                     }
-                    return; // 收入處理完畢，跳過後續拆帳計算
+                    return; 
                 }
                 
-                // 處理支出：依照拆帳模式扣除金額
+                // 處理支出：同時累加支出紀錄，並扣除結餘
                 if (r.type === 'single' && r.payerId) {
+                    expenses[r.payerId][curr] = (expenses[r.payerId][curr] || 0) + r.amount;
                     balances[r.payerId][curr] = (balances[r.payerId][curr] || 0) - r.amount;
                 } else if (r.type === 'multi') {
                     const per = r.amount / state.people.length;
                     state.people.forEach(p => {
+                        expenses[p.id][curr] = (expenses[p.id][curr] || 0) + per;
                         balances[p.id][curr] = (balances[p.id][curr] || 0) - per;
                     });
                 } else if (r.type === 'custom' && r.customSplits) {
                     Object.entries(r.customSplits).forEach(([pid, amt]) => {
+                        expenses[pid][curr] = (expenses[pid][curr] || 0) + amt;
                         balances[pid][curr] = (balances[pid][curr] || 0) - amt;
                     });
                 }
@@ -680,18 +687,24 @@
             let optionsHtml = `<option value="all">所有成員明細</option>`;
             
             state.people.forEach(p => {
-                // 組合該成員的所有幣別結算字串
                 let displayTexts = [];
-                for (const [curr, amt] of Object.entries(balances[p.id])) {
-                    if (amt !== 0) { // 結餘不為 0 時顯示，包含負數
-                        const sym = getCurrencySymbol(curr);
-                        const formattedAmt = Number.isInteger(amt) ? amt.toLocaleString() : amt.toLocaleString(undefined, {minimumFractionDigits: 2});
-                        displayTexts.push(`${sym}${formattedAmt}`);
-                    }
-                }
+                // 統整該成員有碰過的所有幣別（無論是收入還是支出）
+                const allCurrencies = new Set([...Object.keys(expenses[p.id]), ...Object.keys(balances[p.id])]);
                 
-                // 判斷是否有金額產生對應的顯示文案，將「支出」改為「結餘」
-                const summaryText = displayTexts.length > 0 ? `(結餘: ${displayTexts.join(', ')})` : `(無紀錄)`;
+                allCurrencies.forEach(curr => {
+                    const expAmt = expenses[p.id][curr] || 0;
+                    const balAmt = balances[p.id][curr] || 0;
+                    
+                    // 只要有任何一項不為 0，就顯示該幣別的綜合數據
+                    if (expAmt !== 0 || balAmt !== 0) {
+                        const sym = getCurrencySymbol(curr);
+                        const formatAmt = (amt) => Number.isInteger(amt) ? amt.toLocaleString() : amt.toLocaleString(undefined, {minimumFractionDigits: 2});
+                        displayTexts.push(`${sym} 支出:${formatAmt(expAmt)} / 結餘:${formatAmt(balAmt)}`);
+                    }
+                });
+                
+                // 組合最終顯示字串
+                const summaryText = displayTexts.length > 0 ? `(${displayTexts.join(' | ')})` : `(無紀錄)`;
                 
                 optionsHtml += `<option value="${p.id}" ${state.selectedMemberId === p.id ? 'selected' : ''}>${p.name} ${summaryText}</option>`;
             });
