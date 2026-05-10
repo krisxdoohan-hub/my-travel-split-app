@@ -571,48 +571,48 @@
                 pfData['TWD'] = { income: 0, expense: 0 };
             }
             
-            // 3. 動態渲染多幣別卡片
+            // 3. 動態渲染多幣別卡片 (已縮小整體比例)
             let html = '';
             const currencyCount = Object.keys(pfData).length;
             
             for (const [curr, data] of Object.entries(pfData)) {
                 const balance = data.income - data.expense;
-                // 若有多張卡片，寬度縮至 90% 提示可滑動；單張則佔滿 100%
-                const widthClass = currencyCount > 1 ? 'min-w-[90%]' : 'min-w-full';
+                // 將多幣別寬度縮小至 85% 讓卡片更緊湊
+                const widthClass = currencyCount > 1 ? 'min-w-[85%]' : 'min-w-full';
                 
                 html += `
-                <div class="${widthClass} bg-indigo-600 rounded-[1.75rem] p-6 text-white shadow-xl shadow-indigo-200 relative overflow-hidden shrink-0 snap-center transition-all">
-                    <div class="flex justify-between items-start mb-6">
+                <div class="${widthClass} bg-indigo-600 rounded-[1.5rem] p-4 text-white shadow-lg shadow-indigo-200 relative overflow-hidden shrink-0 snap-center transition-all">
+                    <div class="flex justify-between items-start mb-3">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold tracking-wider opacity-90 mt-1">${curr}</span>
-                            ${currencyCount > 1 ? '<span class="px-2 py-0.5 bg-white/20 rounded-full text-[10px] font-black tracking-widest mt-1 animate-pulse">滑動切換</span>' : ''}
+                            <span class="text-xs font-bold tracking-wider opacity-90 mt-1">${curr}</span>
+                            ${currencyCount > 1 ? '<span class="px-2 py-0.5 bg-white/20 rounded-full text-[9px] font-black tracking-widest mt-1 animate-pulse">滑動切換</span>' : ''}
                         </div>
-                        <div class="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
-                            <i class="fa-solid fa-coins text-white/90 text-lg"></i>
+                        <div class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
+                            <i class="fa-solid fa-coins text-white/90 text-sm"></i>
                         </div>
                     </div>
                     
-                    <div class="mb-6">
-                        <p class="text-sm font-medium text-white/80 mb-1">公費結餘</p>
-                        <h3 class="text-5xl font-black tabular-nums tracking-tight">${balance.toLocaleString()}</h3>
+                    <div class="mb-4">
+                        <p class="text-xs font-medium text-white/80 mb-0.5">公費結餘</p>
+                        <h3 class="text-4xl font-black tabular-nums tracking-tight">${balance.toLocaleString()}</h3>
                     </div>
                     
-                    <div class="h-[1px] w-full bg-white/20 mb-4"></div>
+                    <div class="h-[1px] w-full bg-white/20 mb-3"></div>
                     
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <div class="flex items-center gap-1.5 mb-1 opacity-80">
-                                <span class="text-[13px] font-bold">↙</span>
-                                <span class="text-xs font-medium">公費收入</span>
+                            <div class="flex items-center gap-1 mb-0.5 opacity-80">
+                                <span class="text-[11px] font-bold">↙</span>
+                                <span class="text-[11px] font-medium">收入</span>
                             </div>
-                            <p class="text-xl font-bold tabular-nums">${data.income.toLocaleString()}</p>
+                            <p class="text-lg font-bold tabular-nums">${data.income.toLocaleString()}</p>
                         </div>
                         <div>
-                            <div class="flex items-center gap-1.5 mb-1 opacity-80">
-                                <span class="text-[13px] font-bold">↗</span>
-                                <span class="text-xs font-medium">公費支出</span>
+                            <div class="flex items-center gap-1 mb-0.5 opacity-80">
+                                <span class="text-[11px] font-bold">↗</span>
+                                <span class="text-[11px] font-medium">支出</span>
                             </div>
-                            <p class="text-xl font-bold tabular-nums">${data.expense.toLocaleString()}</p>
+                            <p class="text-lg font-bold tabular-nums">${data.expense.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>`;
