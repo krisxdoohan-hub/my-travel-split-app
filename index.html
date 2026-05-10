@@ -392,7 +392,7 @@
             });
         }
 
-        const APP_VERSION = '0.0.3';
+        const APP_VERSION = '0.0.4';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -670,30 +670,67 @@
         }
 
         function renderRecords() {
-            const container = document.getElementById('records-container'), empty = document.getElementById('empty-state');
-            let filtered = state.records;
-            if (state.selectedMemberId) filtered = filtered.filter(r => r.payerId == state.selectedMemberId || r.type === 'multi' || (r.type === 'custom' && r.customSplits && r.customSplits[state.selectedMemberId] > 0));
-            else if (state.selectedDay !== 'all') filtered = filtered.filter(r => r.date === state.selectedDay);
-            if (filtered.length === 0) { container.innerHTML = ''; empty.classList.remove('hidden'); return; }
-            empty.classList.add('hidden');
-            const groups = filtered.reduce((acc, r) => { (acc[r.date] = acc[r.date] || []).push(r); return acc; }, {});
-            
-            container.innerHTML = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a)).map(date => {
-                return `<div class="mb-6"><div class="flex items-baseline gap-2 mb-3 px-1"><span class="text-2xl font-bold text-gray-800">${formatDisplayDate(date)}</span><span class="text-sm font-medium text-gray-400">${['週日','週一','週二','週三','週四','週五','週六'][new Date(date).getDay()]}</span></div><div class="space-y-3">` + 
-                groups[date].map(r => {
-                    const isIncome = r.flowType === 'income';
-                    const colorVal = isIncome ? 'emerald' : 'rose';
-                    const sym = getCurrencySymbol(r.currency || 'TWD');
-                    const isShared = (r.type === 'multi' || r.type === 'custom') && state.people.length > 1;
-                    const payMethodName = r.payMethod === 'cash' ? '現金' : (r.payMethod === 'credit' ? '刷卡' : '公費');
-                    const payMethodColor = r.payMethod === 'cash' ? 'bg-amber-100 text-amber-700' : (r.payMethod === 'credit' ? 'bg-blue-100 text-blue-700' : 'bg-indigo-100 text-indigo-700');
+    const container = document.getElementById('records-container'), empty = document.getElementById('empty-state');
+    let filtered = state.records;
+    
+    if (state.selectedMemberId) filtered = filtered.filter(r => r.payerId == state.selectedMemberId || r.type === 'multi' || (r.type === 'custom' && r.customSplits && r.customSplits[state.selectedMemberId] > 0));
+    else if (state.selectedDay !== 'all') filtered = filtered.filter(r => r.date === state.selectedDay);
+    
+    if (filtered.length === 0) { container.innerHTML = ''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    
+    const groups = filtered.reduce((acc, r) => { (acc[r.date] = acc[r.date] || []).push(r); return acc; }, {});
+    
+    container.innerHTML = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a)).map(date => {
+        return `<div class="mb-6"><div class="flex items-baseline gap-2 mb-3 px-1"><span class="text-2xl font-bold text-gray-800">${formatDisplayDate(date)}</span><span class="text-sm font-medium text-gray-400">${['週日','週一','週二','週三','週四','週五','週六'][new Date(date).getDay()]}</span></div><div class="space-y-3">` + 
+        groups[date].map(r => {
+            const isIncome = r.flowType === 'income';
+            const colorVal = isIncome ? 'emerald' : 'rose';
+            const sym = getCurrencySymbol(r.currency || 'TWD');
+            const isShared = (r.type === 'multi' || r.type === 'custom') && state.people.length > 1;
+            const payMethodName = r.payMethod === 'cash' ? '現金' : (r.payMethod === 'credit' ? '刷卡' : '公費');
+            const payMethodColor = r.payMethod === 'cash' ? 'bg-amber-100 text-amber-700' : (r.payMethod === 'credit' ? 'bg-blue-100 text-blue-700' : 'bg-indigo-100 text-indigo-700');
 
-                    return `<div class="bg-white rounded-[1.25rem] shadow-sm border border-gray-100 p-4"><div class="flex items-center justify-between"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-${colorVal}-50 flex items-center justify-center shrink-0"><i class="fa-solid ${isIncome ? 'fa-arrow-down' : 'fa-arrow-up'} text-${colorVal}-400 text-lg"></i></div><div><div class="flex items-center gap-2 mb-0.5"><h4 class="font-bold text-gray-800 text-base">${r.title}</h4><span class="text-[10px] font-bold px-2 py-0.5 rounded ${payMethodColor}">${payMethodName}</span></div><div class="text-xs text-gray-400">${r.payMethod === 'public' ? '公費款項' : (isShared ? `${state.people.find(p=>p.id==r.payerId)?.name} 負責` : `個人紀錄`)}</div></div></div><div class="text-right text-xl font-medium text-${colorVal}-500">${isIncome?'+':''}${sym}${r.amount.toLocaleString()}</div></div>` +
-                    (isShared ? `<div class="mt-4 pt-3 border-t border-gray-50 flex flex-wrap gap-1.5">${state.people.filter(p=>p.id!=r.payerId).map(p=>{ if(r.type==='custom' && (!r.customSplits||!r.customSplits[p.id])) return ''; const ok = r.settledIds?.includes(p.id); return `<button onclick="toggleSettled(${r.id},'${p.id}')" class="px-2 py-1 rounded text-[10px] font-bold ${ok?'bg-emerald-500 text-white':'bg-gray-100 text-gray-400'}">${p.name}${ok?'✓':''}</button>`;}).join('')}</div>` : '') +
-                    `<div class="flex justify-end gap-3 mt-3 pt-2"><button onclick="editRecord(${r.id})" class="text-[11px] font-bold text-gray-400 hover:text-indigo-500"><i class="fa-solid fa-pen"></i></button><button onclick="deleteRecord(${r.id})" class="text-[11px] font-bold text-gray-400 hover:text-rose-500"><i class="fa-solid fa-trash"></i></button></div></div>`;
-                }).join('') + `</div></div>`;
-            }).join('');
-        }
+            // 構建分帳成員區塊（包含金額與刪除線邏輯）
+            let sharedHtml = '';
+            if (isShared) {
+                const membersHtml = state.people.filter(p => p.id != r.payerId).map(p => {
+                    if (r.type === 'custom' && (!r.customSplits || !r.customSplits[p.id])) return '';
+                    
+                    // 1. 計算該成員金額
+                    let memberAmt = 0;
+                    if (r.type === 'multi') {
+                        memberAmt = r.amount / state.people.length;
+                    } else if (r.type === 'custom') {
+                        memberAmt = r.customSplits[p.id];
+                    }
+                    // 格式化金額
+                    const formattedAmt = Number.isInteger(memberAmt) ? memberAmt.toLocaleString() : memberAmt.toLocaleString(undefined, {minimumFractionDigits: 2});
+                    
+                    // 2. 判斷是否已結算
+                    const ok = r.settledIds?.includes(p.id);
+                    
+                    // 3. 設定按鈕與文字樣式 (結算後呈現反白與刪除線)
+                    const btnStyle = ok ? 'bg-emerald-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+                    const textStyle = ok ? 'line-through opacity-80' : '';
+                    const iconHtml = ok ? '<i class="fa-solid fa-check text-[10px] ml-1"></i>' : '';
+
+                    return `<button onclick="toggleSettled(${r.id},'${p.id}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center ${btnStyle}">
+                        <span class="${textStyle}">${p.name} ${sym}${formattedAmt}</span>${iconHtml}
+                    </button>`;
+                }).join('');
+                
+                if (membersHtml) {
+                    sharedHtml = `<div class="mt-4 pt-3 border-t border-gray-50 flex flex-wrap gap-2">${membersHtml}</div>`;
+                }
+            }
+
+            return `<div class="bg-white rounded-[1.25rem] shadow-sm border border-gray-100 p-4"><div class="flex items-center justify-between"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-${colorVal}-50 flex items-center justify-center shrink-0"><i class="fa-solid ${isIncome ? 'fa-arrow-down' : 'fa-arrow-up'} text-${colorVal}-400 text-lg"></i></div><div><div class="flex items-center gap-2 mb-0.5"><h4 class="font-bold text-gray-800 text-base">${r.title}</h4><span class="text-[10px] font-bold px-2 py-0.5 rounded ${payMethodColor}">${payMethodName}</span></div><div class="text-xs text-gray-400">${r.payMethod === 'public' ? '公費款項' : (isShared ? `${state.people.find(p=>p.id==r.payerId)?.name} 負責` : `個人紀錄`)}</div></div></div><div class="text-right text-xl font-medium text-${colorVal}-500">${isIncome?'+':''}${sym}${r.amount.toLocaleString()}</div></div>` +
+            sharedHtml +
+            `<div class="flex justify-end gap-3 mt-3 pt-2"><button onclick="editRecord(${r.id})" class="text-[11px] font-bold text-gray-400 hover:text-indigo-500"><i class="fa-solid fa-pen"></i></button><button onclick="deleteRecord(${r.id})" class="text-[11px] font-bold text-gray-400 hover:text-rose-500"><i class="fa-solid fa-trash"></i></button></div></div>`;
+        }).join('') + `</div></div>`;
+    }).join('');
+}
 
         // --- Calc & Forms ---
         function resetAddForm() {
