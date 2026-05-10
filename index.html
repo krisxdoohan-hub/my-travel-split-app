@@ -392,7 +392,7 @@
             });
         }
 
-        const APP_VERSION = '0.0.4';
+        const APP_VERSION = '0.0.5';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -643,24 +643,56 @@
         }
 
         function renderMemberSummary() {
-            const container = document.getElementById('member-summary-container'), select = document.getElementById('member-filter-select');
-            if (state.people.length === 0 || state.records.length === 0) { container.classList.add('hidden'); return; }
-            container.classList.remove('hidden');
-            let totals = {}; state.people.forEach(p => totals[p.id] = 0);
-            state.records.forEach(r => {
-                // 如果是公費支出，這裡計算成員負擔可能因人而異。目前先維持舊邏輯（記在payer身上或均分）
-                const flowMultiplier = r.flowType === 'income' ? -1 : 1; // 收入視為貢獻(減少需付金額)
-                if (r.type === 'single' && r.payerId) totals[r.payerId] += (r.amount * flowMultiplier);
-                else if (r.type === 'multi') { const per = (r.amount * flowMultiplier) / state.people.length; state.people.forEach(p => totals[p.id] += per); }
-                else if (r.type === 'custom' && r.customSplits) Object.entries(r.customSplits).forEach(([pid, amt]) => totals[pid] += (amt * flowMultiplier));
-            });
-            let optionsHtml = `<option value="all">所有成員明細</option>`;
+    const container = document.getElementById('member-summary-container'), select = document.getElementById('member-filter-select');
+    if (state.people.length === 0 || state.records.length === 0) { container.classList.add('hidden'); return; }
+    container.classList.remove('hidden');
+    
+    // 初始化多幣別資料結構
+    let totals = {}; 
+    state.people.forEach(p => totals[p.id] = {});
+    
+    state.records.forEach(r => {
+        // 嚴格規定：僅計算支出，忽略收入
+        if (r.flowType === 'income') return;
+        
+        const curr = r.currency || 'TWD';
+        
+        // 依照單人、均分、個別拆帳計算各幣別金額
+        if (r.type === 'single' && r.payerId) {
+            totals[r.payerId][curr] = (totals[r.payerId][curr] || 0) + r.amount;
+        } else if (r.type === 'multi') {
+            const per = r.amount / state.people.length;
             state.people.forEach(p => {
-                const formattedAmt = Number.isInteger(totals[p.id]) ? totals[p.id].toLocaleString() : totals[p.id].toLocaleString(undefined, {minimumFractionDigits: 2});
-                optionsHtml += `<option value="${p.id}" ${state.selectedMemberId === p.id ? 'selected' : ''}>${p.name} (結算: ${formattedAmt})</option>`;
+                totals[p.id][curr] = (totals[p.id][curr] || 0) + per;
             });
-            select.innerHTML = optionsHtml;
+        } else if (r.type === 'custom' && r.customSplits) {
+            Object.entries(r.customSplits).forEach(([pid, amt]) => {
+                totals[pid][curr] = (totals[pid][curr] || 0) + amt;
+            });
         }
+    });
+    
+    let optionsHtml = `<option value="all">所有成員明細</option>`;
+    
+    state.people.forEach(p => {
+        // 組合該成員的所有幣別結算字串
+        let displayTexts = [];
+        for (const [curr, amt] of Object.entries(totals[p.id])) {
+            if (amt > 0) {
+                const sym = getCurrencySymbol(curr);
+                const formattedAmt = Number.isInteger(amt) ? amt.toLocaleString() : amt.toLocaleString(undefined, {minimumFractionDigits: 2});
+                displayTexts.push(`${sym}${formattedAmt}`);
+            }
+        }
+        
+        // 判斷是否有金額產生對應的顯示文案
+        const summaryText = displayTexts.length > 0 ? `(支出: ${displayTexts.join(', ')})` : `(無支出)`;
+        
+        optionsHtml += `<option value="${p.id}" ${state.selectedMemberId === p.id ? 'selected' : ''}>${p.name} ${summaryText}</option>`;
+    });
+    
+    select.innerHTML = optionsHtml;
+}
 
         function updateSummary() {
             const label = document.getElementById('current-day-label');
