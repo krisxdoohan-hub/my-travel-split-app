@@ -647,39 +647,45 @@
             if (state.people.length === 0 || state.records.length === 0) { container.classList.add('hidden'); return; }
             container.classList.remove('hidden');
             
-            // 初始化多幣別資料結構，同時建立「支出 (expenses)」與「結餘 (balances)」兩個追蹤器
-            let expenses = {}; 
-            let balances = {}; 
+            // 初始化容器
+            let personExpenses = {}; 
+            let personBalances = {}; // 這邊專指「現金結餘」
             state.people.forEach(p => {
-                expenses[p.id] = {};
-                balances[p.id] = {};
+                personExpenses[p.id] = {};
+                personBalances[p.id] = {};
             });
             
             state.records.forEach(r => {
                 const curr = r.currency || 'TWD';
+                const isCash = r.payMethod === 'cash'; // 判斷是否為現金交易
+
+                // 排除公費標籤，確保雙軌並行
+                if (r.payMethod === 'public') return;
                 
-                // 處理收入：只增加結餘，不列入支出
+                // 處理收入：預設增加現金結餘
                 if (r.flowType === 'income') {
                     if (r.payerId) {
-                        balances[r.payerId][curr] = (balances[r.payerId][curr] || 0) + r.amount;
+                        personBalances[r.payerId][curr] = (personBalances[r.payerId][curr] || 0) + r.amount;
                     }
                     return; 
                 }
                 
-                // 處理支出：同時累加支出紀錄，並扣除結餘
+                // 處理支出
                 if (r.type === 'single' && r.payerId) {
-                    expenses[r.payerId][curr] = (expenses[r.payerId][curr] || 0) + r.amount;
-                    balances[r.payerId][curr] = (balances[r.payerId][curr] || 0) - r.amount;
+                    // 無論現金或刷卡，都計入支出
+                    personExpenses[r.payerId][curr] = (personExpenses[r.payerId][curr] || 0) + r.amount;
+                    // 只有現金才從結餘扣除
+                    if (isCash) personBalances[r.payerId][curr] = (personBalances[r.payerId][curr] || 0) - r.amount;
                 } else if (r.type === 'multi') {
                     const per = r.amount / state.people.length;
                     state.people.forEach(p => {
-                        expenses[p.id][curr] = (expenses[p.id][curr] || 0) + per;
-                        balances[p.id][curr] = (balances[p.id][curr] || 0) - per;
+                        personExpenses[p.id][curr] = (personExpenses[p.id][curr] || 0) + per;
+                        if (isCash) personBalances[p.id][curr] = (personBalances[p.id][curr] || 0) - per;
                     });
                 } else if (r.type === 'custom' && r.customSplits) {
                     Object.entries(r.customSplits).forEach(([pid, amt]) => {
-                        expenses[pid][curr] = (expenses[pid][curr] || 0) + amt;
-                        balances[pid][curr] = (balances[pid][curr] || 0) - amt;
+                        personExpenses[pid][curr] = (personExpenses[pid][curr] || 0) + amt;
+                        if (isCash) personBalances[pid][curr] = (personBalances[pid][curr] || 0) - amt;
                     });
                 }
             });
@@ -688,24 +694,21 @@
             
             state.people.forEach(p => {
                 let displayTexts = [];
-                // 統整該成員有碰過的所有幣別（無論是收入還是支出）
-                const allCurrencies = new Set([...Object.keys(expenses[p.id]), ...Object.keys(balances[p.id])]);
+                const allCurrencies = new Set([...Object.keys(personExpenses[p.id]), ...Object.keys(personBalances[p.id])]);
                 
                 allCurrencies.forEach(curr => {
-                    const expAmt = expenses[p.id][curr] || 0;
-                    const balAmt = balances[p.id][curr] || 0;
+                    const expAmt = personExpenses[p.id][curr] || 0;
+                    const balAmt = personBalances[p.id][curr] || 0;
                     
-                    // 只要有任何一項不為 0，就顯示該幣別的綜合數據
                     if (expAmt !== 0 || balAmt !== 0) {
                         const sym = getCurrencySymbol(curr);
-                        const formatAmt = (amt) => Number.isInteger(amt) ? amt.toLocaleString() : amt.toLocaleString(undefined, {minimumFractionDigits: 2});
-                        displayTexts.push(`${sym} 支出:${formatAmt(expAmt)} / 結餘:${formatAmt(balAmt)}`);
+                        const f = (n) => Number.isInteger(n) ? n.toLocaleString() : n.toLocaleString(undefined, {minimumFractionDigits: 2});
+                        // 支出包含現金+刷卡 / 結餘僅反映現金剩餘
+                        displayTexts.push(`${sym} 支出:${f(expAmt)} / 現金結餘:${f(balAmt)}`);
                     }
                 });
                 
-                // 組合最終顯示字串
-                const summaryText = displayTexts.length > 0 ? `(${displayTexts.join(' | ')})` : `(無紀錄)`;
-                
+                const summaryText = displayTexts.length > 0 ? `(${displayTexts.join(' | ')})` : `(無個人收支)`;
                 optionsHtml += `<option value="${p.id}" ${state.selectedMemberId === p.id ? 'selected' : ''}>${p.name} ${summaryText}</option>`;
             });
             
