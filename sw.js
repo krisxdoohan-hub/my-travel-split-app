@@ -3,7 +3,7 @@
  * 負責離線快取與資源管理
  */
 
-const CACHE_NAME = 'travel-split-v0.0.5';
+const CACHE_NAME = 'travel-split-v0.0.6';
 
 // 定義需要快取的靜態資源
 const ASSETS_TO_CACHE = [
