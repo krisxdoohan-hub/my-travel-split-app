@@ -110,7 +110,7 @@
                 <div class="flex items-center justify-center gap-4 bg-white p-4 rounded-3xl shadow-sm border border-slate-100 mx-8">
                     <button onclick="changePersonCount(-1)" class="w-12 h-12 rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center justify-center font-black text-xl active:scale-90">-</button>
                     <div class="flex-1 flex items-center justify-center gap-1">
-                        <input type="number" id="setup-person-count" value="2" min="1" onchange="setPersonCount(parseInt(this.value))" class="w-16 text-center text-4xl font-black text-slate-800 bg-transparent outline-none p-0">
+                        <input type="number" id="setup-person-count" value="1" min="1" onchange="setPersonCount(parseInt(this.value))" class="w-16 text-center text-4xl font-black text-slate-800 bg-transparent outline-none p-0">
                         <span class="text-lg font-bold text-slate-400 mb-[-10px]">人</span>
                     </div>
                     <button onclick="changePersonCount(1)" class="w-12 h-12 rounded-full bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center justify-center font-black text-xl active:scale-90">+</button>
@@ -585,7 +585,7 @@
             if (state.people.length === 0) { 
                 showView('setup'); 
                 toggleNav(false); 
-                setPersonCount(2); // 預設產出兩人輸入框
+                setPersonCount(1); // 預設產出單人輸入框，支援個人記帳
                 return; 
             }
             
