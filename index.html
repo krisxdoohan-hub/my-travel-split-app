@@ -87,9 +87,6 @@
                 <button onclick="quickUpload()" class="p-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors group relative" id="cloud-status-btn" title="雲端同步狀態">
                     <i id="cloud-status-icon" class="fa-solid fa-cloud text-slate-300 text-lg transition-colors"></i>
                 </button>
-                <button onclick="resetApp()" class="p-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors group">
-                    <i class="fa-solid fa-power-off text-lg text-slate-400 group-hover:text-red-500"></i>
-                </button>
             </div>
         </div>
     </header>
@@ -844,20 +841,18 @@
 
         async function endTrip() {
             const myId = localStorage.getItem('travel_split_my_id');
-            // 權限防護：只有主揪 (系統產生的第一位夥伴 ID 必為 '0') 可以執行
             if (myId !== '0') {
                 showCustomModal('alert', '權限不足：\n只有主揪（夥伴 1）可以執行旅程結案與洗牌動作。');
                 return;
             }
             
-            showCustomModal('confirm', '【危險操作警告】\n確定要結束本次旅程嗎？\n這將會上傳一份空白資料覆蓋雲端，所有夥伴的手機將會自動解除綁定、銷毀所有照片與明細。\n(請確保大家都已結清款項)', async () => {
-                showCustomModal('success', '正在執行結案洗牌程序...', null, '系統執行中');
+            showCustomModal('confirm', '【危險操作警告】\n確定要結束本次旅程嗎？\n這將會上傳一份空白資料覆蓋雲端，所有夥伴的手機將會自動解除綁定、銷毀所有明細。', async () => {
                 
                 // 1. 將本地資料清空為初始狀態
                 state.people = [];
                 state.records = [];
                 
-                // 2. 強制將這份空白母本上傳覆蓋 GitHub (銷毀照片與明細)
+                // 2. 強制將這份空白母本上傳覆蓋 GitHub (銷毀雲端資料)
                 if (syncConfig.token) {
                     await uploadToGitHub(true);
                 }
@@ -868,9 +863,8 @@
                 localStorage.removeItem('gh_token_global');
                 localStorage.removeItem('travel_split_my_id');
                 
-                showCustomModal('success', '旅程已完美結案！\n雲端與本機資料已徹底銷毀清空。', () => {
-                    location.reload(); // 重新載入，退回初始「選擇人數」畫面
-                });
+                // 4. 無須等待，直接執行畫面重整，瞬間退回初始「選擇人數」畫面
+                location.reload(); 
             }, '一鍵結案');
         }
 
