@@ -604,6 +604,13 @@
             // 情況三：身分驗證通過，進入主儀表板
             showView('main'); 
             toggleNav(true); 
+            
+            // 權限控管：僅主揪 (ID 為 '0') 能看到底部的「設定」按鈕
+            const settingsBtn = document.getElementById('nav-settings');
+            if (settingsBtn) {
+                settingsBtn.style.display = (myId === '0') ? 'flex' : 'none';
+            }
+
             document.getElementById('split-toggle-container').style.display = state.people.length <= 1 ? 'none' : 'grid';
             updateSummary(); renderDays(); renderRecords(); renderMemberSummary(); updateCloudStatusUI(); updatePublicFundDashboard();
         }
