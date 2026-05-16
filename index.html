@@ -455,19 +455,16 @@
     </div>
 
     <script>
+        // 【終極決策】：徹底廢除 Service Worker，將所有快取管家強制解僱，從此根絕 Android 破圖與連線阻擋
         if ('serviceWorker' in navigator) {
-            // 【終極殺手鐧】：強制解僱所有卡死的三星/Android舊快取管家
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
                 for(let registration of registrations) {
                     registration.unregister();
                 }
-            }).then(() => {
-                // 清理完畢後，再重新註冊全新管家
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed', err));
             });
         }
 
-        const APP_VERSION = '0.1.2';
+        const APP_VERSION = '0.1.3';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -552,17 +549,29 @@
                     const decodedStr = decodeURIComponent(escape(atob(inviteCode)));
                     const inviteConfig = JSON.parse(decodedStr);
                     if (inviteConfig.owner && inviteConfig.repo && inviteConfig.token) {
-                        syncConfig = inviteConfig;
-                        localStorage.setItem('travel_split_sync_config', JSON.stringify({ ...syncConfig, hasUnsyncedChanges: false }));
-                        localStorage.setItem('gh_token_global', syncConfig.token);
                         
-                        // 清除網址列參數，讓網址恢復乾淨，避免重新整理再次觸發
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                        hasAutoDownloaded = true;
-                        
-                        // 既然是剛掃碼進來，強制清空本地身分紀錄，確保強制攔截至「密碼解鎖畫面」
-                        localStorage.removeItem('travel_split_my_id');
-                        await downloadFromGitHub(false); // 執行強制下載 (顯示視窗讓夥伴安心)
+                        // 【蘋果 Safari 救援】：檢查是否已經綁定過相同金鑰，避免重複彈出下載視窗
+                        const savedConfigStr = localStorage.getItem('travel_split_sync_config');
+                        let alreadyBound = false;
+                        if (savedConfigStr) {
+                            const savedConfig = JSON.parse(savedConfigStr);
+                            if (savedConfig.repo === inviteConfig.repo && savedConfig.token === inviteConfig.token) {
+                                alreadyBound = true;
+                            }
+                        }
+
+                        if (!alreadyBound) {
+                            syncConfig = inviteConfig;
+                            localStorage.setItem('travel_split_sync_config', JSON.stringify({ ...syncConfig, hasUnsyncedChanges: false }));
+                            localStorage.setItem('gh_token_global', syncConfig.token);
+                            
+                            // 【核心關鍵】：移除原本的網址清除邏輯！保留 ?invite= 參數。
+                            // 這樣夥伴從 LINE 點擊「使用 Safari 開啟」時，網址才不會遺失金鑰！
+                            
+                            hasAutoDownloaded = true;
+                            localStorage.removeItem('travel_split_my_id');
+                            await downloadFromGitHub(false); 
+                        }
                     }
                 } catch (e) {
                     console.error('邀請碼解析失敗', e);
@@ -676,7 +685,6 @@
                 const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
                 
                 if (content && content.people) {
-                    // 偵測到雲端洗牌 (空白母本)，觸發強制解綁並清空本地端
                     if (content.people.length === 0 && state.people.length > 0) {
                         localStorage.removeItem('travel_split_state');
                         localStorage.removeItem('travel_split_sync_config');
@@ -686,7 +694,6 @@
                         return;
                     }
 
-                    // 【修正重點】同時比對「明細」與「人員名單」，確保剛創立的空白帳本也能成功載入人員！
                     const isRecordsChanged = JSON.stringify(state.records) !== JSON.stringify(content.records);
                     const isPeopleChanged = JSON.stringify(state.people) !== JSON.stringify(content.people);
                     
@@ -697,12 +704,22 @@
                         initApp();
                     }
                     
-                    // 下載成功後，如果是掃碼進來 (isAuto=false)，按確定後強制刷新畫面進入密碼解鎖
                     if (!isAuto) {
                         showCustomModal('success', '已從雲端下載最新資料。', () => { initApp(); }, '下載完成');
                     }
                 }
-            } catch (error) { if (!isAuto) showCustomModal('alert', `自動同步失敗：\n${error.message}`); }
+            } catch (error) { 
+                // 【Android 終極救援】：如果舊版快取管家依然陰魂不散攔截了 API 導致 Failed to fetch，
+                // 系統將自動強制重新整理網頁一次，徹底擺脫舊管家的糾纏！
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    if (!sessionStorage.getItem('sw_reloaded')) {
+                        sessionStorage.setItem('sw_reloaded', 'true');
+                        window.location.reload(true);
+                        return;
+                    }
+                }
+                if (!isAuto) showCustomModal('alert', `自動同步失敗：\n${error.message}`); 
+            }
         }
 
         async function uploadToGitHub(isAuto = false) {
