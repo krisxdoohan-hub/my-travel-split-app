@@ -464,7 +464,7 @@
             });
         }
 
-        const APP_VERSION = '0.1.4';
+        const APP_VERSION = '0.1.5';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -686,24 +686,28 @@
                 const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
                 
                 if (content && content.people) {
-                    if (content.people.length === 0 && state.people.length > 0) {
-                        localStorage.removeItem('travel_split_state');
-                        localStorage.removeItem('travel_split_sync_config');
-                        localStorage.removeItem('gh_token_global');
-                        localStorage.removeItem('travel_split_my_id');
-                        showCustomModal('alert', '主揪已結束本次旅程並清空帳本。\n系統將自動為您清除本地紀錄並解除雲端綁定。', () => { location.reload(); }, '旅程結束');
-                        return;
-                    }
+    if (content.people.length === 0 && state.people.length > 0) {
+        localStorage.removeItem('travel_split_state');
+        localStorage.removeItem('travel_split_sync_config');
+        localStorage.removeItem('gh_token_global');
+        localStorage.removeItem('travel_split_my_id');
+        showCustomModal('alert', '主揪已結束本次旅程並清空帳本。\n系統將自動為您清除本地紀錄並解除雲端綁定。', () => { location.reload(); }, '旅程結束');
+        return;
+    }
 
-                    const isRecordsChanged = JSON.stringify(state.records) !== JSON.stringify(content.records);
-                    const isPeopleChanged = JSON.stringify(state.people) !== JSON.stringify(content.people);
-                    
-                    if (isRecordsChanged || isPeopleChanged) {
-                        state.people = content.people;
-                        state.records = content.records;
-                        saveLocalState(true);
-                        initApp();
-                    }
+    // ✅ 無論資料有無變動，都先更新 state 和 localStorage
+    state.people = content.people;
+    state.records = content.records;
+    saveLocalState(true);
+
+    if (!isAuto) {
+        // QR Code 邀請流程：顯示歡迎彈窗，按確定才進入
+        showCustomModal('success', '已從雲端下載最新資料，歡迎加入帳本！', () => { initApp(); }, '下載完成');
+    } else {
+        // 自動背景同步：靜默更新，直接 initApp
+        initApp();
+    }
+}
                     
                     if (!isAuto) {
                         showCustomModal('success', '已從雲端下載最新資料。', () => { initApp(); }, '下載完成');
