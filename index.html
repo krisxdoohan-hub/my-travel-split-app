@@ -461,7 +461,7 @@
             });
         }
 
-        const APP_VERSION = '0.1.0';
+        const APP_VERSION = '0.1.1';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -1201,7 +1201,13 @@ window.handleTouchEnd = function(e, id) {
 
         // --- Calc & Forms ---
         function resetAddForm() {
+            const titleEl = document.getElementById('add-view-title');
+            const indicatorEl = document.getElementById('edit-indicator');
+
             if (state.editingId) {
+                titleEl.innerText = '編輯紀錄';
+                indicatorEl.classList.remove('hidden');
+
                 const r = state.records.find(rec => rec.id === state.editingId);
                 state.currentAmount = r.amount.toString(); 
                 state.currentFlowType = r.flowType || 'expense'; 
@@ -1214,6 +1220,9 @@ window.handleTouchEnd = function(e, id) {
                 document.getElementById('item-date').value = formatDateForInput(r.date);
                 document.getElementById('currency-select').value = r.currency || 'TWD';
             } else {
+                titleEl.innerText = '新增紀錄';
+                indicatorEl.classList.add('hidden');
+
                 state.currentAmount = '0'; 
                 state.currentFlowType = 'expense'; 
                 state.currentType = state.people.length > 1 ? 'multi' : 'single'; 
@@ -1243,7 +1252,6 @@ window.handleTouchEnd = function(e, id) {
             renderPayerGrid(); 
             updateAmountDisplay();
         }
-
         // 新增收支切換邏輯
         function setFlowType(type) {
             state.currentFlowType = type;
@@ -1342,10 +1350,10 @@ window.handleTouchEnd = function(e, id) {
             }
         }
 
-        function deleteRecord(id) { showCustomModal('confirm', '確定要刪除嗎？', () => { state.records = state.records.filter(r=>r.id!==id); saveLocalState(false); renderRecords(); updateSummary(); renderMemberSummary(); updatePublicFundDashboard(); }); }
+        async function deleteRecord(id) { showCustomModal('confirm', '確定要刪除嗎？', async () => { state.records = state.records.filter(r=>r.id!==id); saveLocalState(false); renderRecords(); updateSummary(); renderMemberSummary(); updatePublicFundDashboard(); if (syncConfig.token) { await uploadToGitHub(true); } }); }
         function editRecord(id) { state.editingId = id; showView('add'); }
-        function toggleSettled(recId, pId) { const r = state.records.find(rec=>rec.id===recId); r.settledIds = r.settledIds || []; const idx = r.settledIds.indexOf(pId); if (idx > -1) r.settledIds.splice(idx,1); else r.settledIds.push(pId); saveLocalState(false); renderRecords(); }
-
+        async function toggleSettled(recId, pId) { const r = state.records.find(rec=>rec.id===recId); r.settledIds = r.settledIds || []; const idx = r.settledIds.indexOf(pId); if (idx > -1) r.settledIds.splice(idx,1); else r.settledIds.push(pId); saveLocalState(false); renderRecords(); if (syncConfig.token) { await uploadToGitHub(true); } }
+        
         // --- Utils ---
         function saveLocalState(isFromCloud = false) {
             localStorage.setItem('travel_split_state', JSON.stringify({ people: state.people, records: state.records }));
