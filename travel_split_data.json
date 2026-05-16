@@ -1,66 +1,6 @@
 {
   "version": "0.1.1",
-  "timestamp": "2026-05-16T13:25:59.165Z",
-  "people": [
-    {
-      "id": "0",
-      "name": "夥伴 1",
-      "password": "0430"
-    },
-    {
-      "id": "1",
-      "name": "1111",
-      "password": "1111"
-    },
-    {
-      "id": "2",
-      "name": "2222",
-      "password": "2222"
-    },
-    {
-      "id": "3",
-      "name": "3333",
-      "password": "3333"
-    },
-    {
-      "id": "4",
-      "name": "4444",
-      "password": "4444"
-    }
-  ],
-  "records": [
-    {
-      "id": 1778935199982,
-      "date": "2026/5/16",
-      "title": "未分類紀錄",
-      "amount": 55,
-      "currency": "TWD",
-      "flowType": "expense",
-      "type": "multi",
-      "payMethod": "cash",
-      "payerId": "0",
-      "customSplits": null,
-      "settledIds": [
-        "1",
-        "2",
-        "3",
-        "4"
-      ],
-      "photo": null
-    },
-    {
-      "id": 1778935183459,
-      "date": "2026/5/16",
-      "title": "未分類紀錄",
-      "amount": 9,
-      "currency": "TWD",
-      "flowType": "expense",
-      "type": "single",
-      "payMethod": "cash",
-      "payerId": "0",
-      "customSplits": null,
-      "settledIds": [],
-      "photo": null
-    }
-  ]
+  "timestamp": "2026-05-16T13:26:04.797Z",
+  "people": [],
+  "records": []
 }
