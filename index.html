@@ -164,34 +164,7 @@
             </div>
         </section>
 
-        <section id="view-login" class="view flex-col items-center justify-center space-y-8 min-h-[70vh]">
-            <div class="text-center space-y-3 w-full">
-                <div class="w-24 h-24 bg-amber-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner">
-                    <i class="fa-solid fa-lock text-5xl text-amber-500"></i>
-                </div>
-                <h2 class="text-2xl font-black text-slate-800">身分驗證</h2>
-                <p class="text-slate-400 font-medium">請選擇您的名字並輸入專屬密碼</p>
-            </div>
-            
-            <div class="w-full bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-5">
-                <div class="relative">
-                    <select id="login-member-select" class="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold text-lg py-4 pl-4 pr-10 rounded-xl appearance-none focus:outline-none focus:border-indigo-300">
-                        </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                        <i class="fa-solid fa-caret-down"></i>
-                    </div>
-                </div>
-                
-                <input type="password" id="login-password" placeholder="輸入 4 位數專屬密碼" maxlength="4" pattern="[0-9]*" inputmode="numeric" class="w-full bg-slate-50 border border-slate-200 text-center tracking-[0.5em] font-black text-xl py-4 rounded-xl focus:outline-none focus:border-amber-300">
-                
-                <button onclick="verifyLogin()" class="w-full py-4 bg-amber-500 text-white rounded-xl font-black shadow-lg shadow-amber-200 active:scale-95 transition-all text-lg">
-                    解鎖進入帳本
-                </button>
-            </div>
-        </section>
-
-        <!-- Main View -->
-        <section id="view-main" class="view flex-col space-y-6">
+        <section id="view-main" class="view flex-col space-y-6">       
             
             <!-- 公費餘額儀表板 (支援多幣別橫向滑動) -->
             <div id="dashboard-public-fund-container" class="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide mt-2 pb-2">
@@ -527,7 +500,7 @@
             }
         }
 
-        const APP_VERSION = '0.2.3';
+        const APP_VERSION = '0.2.4';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -662,26 +635,14 @@
                 return; 
             }
             
-            // 情況二：已有資料，檢查本機是否已通過密碼驗證 (密碼鎖防線)
-            const myId = localStorage.getItem('travel_split_my_id');
-            if (!myId) {
-                // 未綁定身分，強制攔截並導向解鎖畫面
-                const select = document.getElementById('login-member-select');
-                select.innerHTML = state.people.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-                document.getElementById('login-password').value = '';
-                showView('login');
-                toggleNav(false);
-                return;
-            }
-
-            // 情況三：身分驗證通過，進入主儀表板
+            // 情況二：已有資料，無需解鎖，所有人直接進入主儀表板看相同畫面
             showView('main'); 
             toggleNav(true); 
             
-            // 權限控管：僅主揪 (ID 為 '0') 能看到底部的「設定」按鈕
+            // 所有人皆可進入設定頁面
             const settingsBtn = document.getElementById('nav-settings');
             if (settingsBtn) {
-                settingsBtn.style.display = (myId === '0') ? 'flex' : 'none';
+                settingsBtn.style.display = 'flex';
             }
 
             document.getElementById('split-toggle-container').style.display = state.people.length <= 1 ? 'none' : 'grid';
@@ -981,17 +942,10 @@
             container.innerHTML = '';
             
             for (let i = 1; i <= count; i++) {
-                // 自動產生 4 位數隨機密碼
-                const randomPwd = Math.floor(1000 + Math.random() * 9000).toString();
                 container.innerHTML += `
                 <div class="bg-white border border-slate-100 p-3 rounded-2xl shadow-sm flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-xs shrink-0">${i}</div>
                     <input type="text" placeholder="夥伴暱稱 ${i}" class="nickname-input flex-1 font-bold text-slate-700 bg-transparent outline-none placeholder:text-slate-300" data-id="${i-1}">
-                    <div class="w-[1px] h-8 bg-slate-100"></div>
-                    <div class="relative w-20 shrink-0">
-                        <span class="absolute -top-3 left-1 text-[9px] font-black text-slate-400 bg-white px-1">專屬密碼</span>
-                        <input type="text" value="${randomPwd}" class="password-input w-full font-black text-amber-500 text-center tracking-widest bg-transparent outline-none" data-id="${i-1}" maxlength="4" pattern="[0-9]*" inputmode="numeric">
-                    </div>
                 </div>`;
             }
             document.getElementById('nickname-inputs').classList.remove('hidden');
@@ -999,35 +953,14 @@
 
         function startTrip() {
             const nameInputs = document.querySelectorAll('.nickname-input');
-            const pwdInputs = document.querySelectorAll('.password-input');
             
-            state.people = Array.from(nameInputs).map((input, idx) => ({ 
+            state.people = Array.from(nameInputs).map((input) => ({ 
                 id: input.dataset.id, 
-                name: input.value.trim() || `夥伴 ${parseInt(input.dataset.id) + 1}`,
-                password: pwdInputs[idx].value.trim() || '0000' // 將密碼綁定至人員資料
+                name: input.value.trim() || `夥伴 ${parseInt(input.dataset.id) + 1}`
             }));
             
-            // 主揪自己預設為夥伴 1 (id: '0')，自動放行並記憶
-            localStorage.setItem('travel_split_my_id', '0');
             saveLocalState(false); 
             initApp();
-        }
-
-        function verifyLogin() {
-            const selectedId = document.getElementById('login-member-select').value;
-            const inputPwd = document.getElementById('login-password').value.trim();
-            const targetPerson = state.people.find(p => p.id === selectedId);
-            
-            if (targetPerson && targetPerson.password === inputPwd) {
-                // 密碼正確，將此設備永久綁定為該成員
-                localStorage.setItem('travel_split_my_id', selectedId);
-                showCustomModal('success', `歡迎回來，${targetPerson.name}！\n您的設備已成功解鎖並綁定。`, () => {
-                    initApp();
-                });
-            } else {
-                showCustomModal('alert', '密碼錯誤，請確認後重新輸入。');
-                document.getElementById('login-password').value = '';
-            }
         }
 
         function resetApp() {
@@ -1037,13 +970,7 @@
         }
 
         async function endTrip() {
-            const myId = localStorage.getItem('travel_split_my_id');
-            if (myId !== '0') {
-                showCustomModal('alert', '權限不足：\n只有主揪（夥伴 1）可以執行旅程結案與洗牌動作。');
-                return;
-            }
-            
-            showCustomModal('confirm', '【危險操作警告】\n確定要結束本次旅程嗎？\n這將會上傳一份空白資料覆蓋雲端，所有夥伴的手機將會自動解除綁定、銷毀所有明細。', async () => {
+            showCustomModal('confirm', '【危險操作警告】\n確定要結束本次旅程嗎？\n這將會上傳一份空白資料覆蓋雲端，並清除所有設備上的明細紀錄。', async () => {
                 
                 // 1. 將本地資料清空為初始狀態
                 state.people = [];
@@ -1054,13 +981,12 @@
                     await uploadToGitHub(true);
                 }
                 
-                // 3. 徹底清空主揪本地的記憶體與金鑰
+                // 3. 徹底清空本地的記憶體與金鑰
                 localStorage.removeItem('travel_split_state'); 
                 localStorage.removeItem('travel_split_sync_config'); 
                 localStorage.removeItem('gh_token_global');
-                localStorage.removeItem('travel_split_my_id');
                 
-                // 4. 無須等待，直接執行畫面重整，瞬間退回初始「選擇人數」畫面
+                // 4. 瞬間退回大門畫面
                 location.reload(); 
             }, '一鍵結案');
         }
@@ -1176,8 +1102,6 @@
             if (state.people.length === 0 || state.records.length === 0) { container.classList.add('hidden'); return; }
             container.classList.remove('hidden');
             
-            const myId = localStorage.getItem('travel_split_my_id');
-            
             // 初始化容器
             let personExpenses = {}; 
             let personBalances = {}; 
@@ -1233,13 +1157,8 @@
                     }
                 });
                 
-                // 隱私隔離防線：非本人帳號強制遮蔽金額，僅顯示名字供篩選明細使用
-                let summaryText = '';
-                if (p.id === myId) {
-                    summaryText = displayTexts.length > 0 ? `(${displayTexts.join(' | ')})` : `(無個人收支)`;
-                } else {
-                    summaryText = `(隱私保護，僅顯示本人金額)`;
-                }
+                // 完全開放：所有人都能看到明細總結
+                let summaryText = displayTexts.length > 0 ? `(${displayTexts.join(' | ')})` : `(無個人收支)`;
                 
                 optionsHtml += `<option value="${p.id}" ${state.selectedMemberId === p.id ? 'selected' : ''}>${p.name} ${summaryText}</option>`;
             });
