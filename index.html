@@ -527,7 +527,7 @@
             }
         }
 
-        const APP_VERSION = '0.2.2';
+        const APP_VERSION = '0.2.3';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -785,14 +785,17 @@
                 const safeOwner = encodeURIComponent(syncConfig.owner.trim());
                 const safeRepo = encodeURIComponent(syncConfig.repo.trim());
                 const safeToken = syncConfig.token.trim();
-                const url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}`;
+                
+                // 【下載專用】：強制加上時間標籤，徹底粉碎瀏覽器舊快取
+                const getUrl = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}?t=${Date.now()}`;
 
-                const response = await fetch(url, {
+                const response = await fetch(getUrl, {
                     method: 'GET',
+                    cache: 'no-store',
                     headers: {
                         'Authorization': `Bearer ${safeToken}`,
                         'Accept': 'application/vnd.github.v3+json',
-                        'Cache-Control': 'no-cache'
+                        'Cache-Control': 'no-cache, no-store, must-revalidate'
                     }
                 });
 
@@ -843,24 +846,32 @@
                 const safeOwner = encodeURIComponent(syncConfig.owner.trim());
                 const safeRepo = encodeURIComponent(syncConfig.repo.trim());
                 const safeToken = syncConfig.token.trim();
-                const url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}`;
+                
+                // 1. GET 專用網址 (加時間標籤防快取騙局)
+                const getUrl = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}?t=${Date.now()}`;
+                // 2. PUT 專用網址 (絕對乾淨，防 GitHub 阻擋)
+                const putUrl = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}`;
 
                 const headers = {
                     'Authorization': `Bearer ${safeToken}`,
                     'Accept': 'application/vnd.github.v3+json'
                 };
 
-                // 1. 先抓取目前檔案的 SHA 值 (若無檔案則略過)
+                // 1. 確保抓到最新真實的 SHA 值
                 let currentSha = null;
                 try {
-                    const getRes = await fetch(url, { method: 'GET', headers: { ...headers, 'Cache-Control': 'no-cache' } });
+                    const getRes = await fetch(getUrl, { 
+                        method: 'GET', 
+                        cache: 'no-store',
+                        headers: { ...headers, 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
+                    });
                     if (getRes.ok) {
                         const data = await getRes.json();
                         currentSha = data.sha;
                     }
                 } catch(e) { }
 
-                // 2. 組裝安全的上傳包裹 (絕對不可傳入 null 的 sha)
+                // 2. 組裝上傳包裹 (若雲端有檔案，一定會附上 sha 蓋過去)
                 const bodyObj = {
                     message: "Sync from Travel Split App",
                     content: base64Content
@@ -870,7 +881,7 @@
                 }
 
                 // 3. 執行覆蓋上傳
-                const putRes = await fetch(url, {
+                const putRes = await fetch(putUrl, {
                     method: 'PUT',
                     headers: { ...headers, 'Content-Type': 'application/json' },
                     body: JSON.stringify(bodyObj)
