@@ -1,11 +1,11 @@
 /**
- * Travel Split App - Service Worker (v0.0.1)
- * 負責離線快取與資源管理 (已修復跨平台 CORS 與畫面崩壞問題)
+ * Travel Split App - Service Worker (v0.0.8)
+ * 負責離線快取與資源管理
  */
 
-const CACHE_NAME = 'travel-split-v0.0.7';
+const CACHE_NAME = 'travel-split-v0.0.8';
 
-// 僅快取本地核心檔案，將外部 CDN 移除以確保 Android 裝置正常載入畫面
+// 【修正重點】絕對不可包含 tailwindcss 或 font-awesome 等外部網址，避免 Android 破圖
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -37,7 +37,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // 絕對放行：GitHub API 與所有外部 CDN，避免 Safari/Chrome 產生 Load failed 或 CORS 錯誤
+  // 排除所有外部 API 與 CDN，強制走網路連線，徹底避開 CORS 阻擋
   if (!event.request.url.startsWith(self.location.origin)) {
     return;
   }
