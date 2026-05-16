@@ -456,12 +456,18 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
+            // 【終極殺手鐧】：強制解僱所有卡死的三星/Android舊快取管家
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            }).then(() => {
+                // 清理完畢後，再重新註冊全新管家
                 navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed', err));
             });
         }
 
-        const APP_VERSION = '0.1.1';
+        const APP_VERSION = '0.1.2';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -723,11 +729,24 @@
         async function quickUpload() { await uploadToGitHub(true); }
 
         // --- Settings Helpers ---
-        function saveGitHubConfig() {
+        async function saveGitHubConfig() {
             const owner = document.getElementById('gh-owner').value.trim(), repo = document.getElementById('gh-repo').value.trim(), token = document.getElementById('gh-token').value.trim();
             if (!owner && !repo && !token) { syncConfig = { owner: '', repo: '', token: '' }; saveSyncStatus(); updateCloudStatusUI(); showCustomModal('success', '雲端綁定已成功解除。'); return; }
             if (!owner || !repo || !token) { showCustomModal('alert', '請輸入完整的帳號、儲存庫與 Token，或將三者皆清空以解除綁定。'); return; }
-            syncConfig = { owner, repo, token }; saveSyncStatus(); updateCloudStatusUI(); showCustomModal('success', '連接設定已儲存。\nToken 已同步至共享區。');
+            
+            syncConfig = { owner, repo, token }; 
+            saveSyncStatus(); 
+            updateCloudStatusUI(); 
+            
+            // 【防呆機制】：綁定完金鑰後，若電腦裡已經有設定好的人數，立刻幫主揪自動上傳覆蓋！
+            if (state.people.length > 0) {
+                showCustomModal('success', '正在為您將「人員設定」同步至雲端...', null, '系統執行中');
+                await uploadToGitHub(true);
+                showCustomModal('success', '雲端備份已完成！\n現在可以請夥伴掃描下方 QR Code 了。');
+            } else {
+                showCustomModal('success', '連接設定已儲存。\nToken 已同步至共享區。');
+            }
+            generateInviteQR(); // 更新 QR Code
         }
 
         function loadSyncConfig() {
