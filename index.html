@@ -94,6 +94,44 @@
     <main class="flex-1 flex flex-col p-4 mb-24 max-w-lg mx-auto w-full">
         
         <!-- Setup View -->
+              
+        <section id="view-welcome" class="view flex-col items-center justify-center space-y-8 min-h-[70vh]">
+            <div class="text-center space-y-3">
+                <div class="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto mb-4 shadow-inner">
+                    <i class="fa-solid fa-map-location-dot text-5xl text-indigo-600"></i>
+                </div>
+                <h2 class="text-3xl font-black text-slate-800">隨手記帳本</h2>
+                <p class="text-slate-400 font-medium">請選擇您的旅程入口</p>
+            </div>
+
+            <div class="w-full space-y-5 px-4">
+                <button onclick="showView('setup'); setPersonCount(1);" class="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-200 active:scale-95 transition-all text-lg flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-plane-departure"></i> 建立全新旅程
+                </button>
+
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="shrink-0 mx-4 text-slate-400 text-xs font-black tracking-widest uppercase">或者</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
+                    <div class="flex items-center gap-2 text-slate-700 font-black text-lg">
+                        <i class="fa-solid fa-right-to-bracket text-amber-500"></i>
+                        <h3>加入已有旅程</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">請貼上主揪提供的「房間代號 (邀請碼)」</p>
+                    <div class="space-y-3">
+                        <input type="text" id="join-invite-code" placeholder="在此貼上代號..." class="w-full bg-slate-50 text-sm font-medium p-3.5 rounded-xl border border-slate-200 focus:border-amber-400 transition-all outline-none">
+                        <button onclick="joinWithCode()" class="w-full py-3.5 bg-slate-800 text-white rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all flex justify-center items-center gap-2 hover:bg-slate-700">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> 載入雲端帳本
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="view-setup" class="view flex-col items-center justify-center space-y-6 min-h-[70vh]">
             <div class="text-center space-y-3">
                 <div class="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto mb-4 shadow-inner">
@@ -377,6 +415,22 @@
                     </div>
 
                     <div id="invite-qr-container" class="hidden mt-4 pt-4 border-t border-blue-200/60 flex-col items-center space-y-3">
+                        <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">邀請夥伴加入</p>
+                        <div id="invite-qrcode" class="p-2 bg-white rounded-xl shadow-sm border border-blue-100"></div>
+                        
+                        <div class="w-full space-y-1.5 mt-2 bg-blue-50/50 p-3 rounded-xl border border-blue-50">
+                            <p class="text-[10px] text-blue-500 font-bold ml-1">房間代號 (邀請碼)：</p>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="invite-code-display" readonly class="flex-1 bg-white text-xs text-slate-500 p-2.5 rounded-lg border border-blue-100 outline-none font-medium">
+                                <button onclick="copyInviteCode()" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm">複製</button>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-blue-400 text-center leading-relaxed mt-2">請夥伴掃描條碼<br>或複製上方代號傳送至 LINE 群組</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 shadow-sm">
                         <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">邀請夥伴掃描加入</p>
                         <div id="invite-qrcode" class="p-2 bg-white rounded-xl shadow-sm border border-blue-100"></div>
                         <p class="text-[10px] text-blue-400 text-center leading-relaxed">夥伴掃描後將自動載入帳本<br>基於資安，請勿將此條碼外流給非同行者</p>
@@ -464,7 +518,7 @@
             });
         }
 
-        const APP_VERSION = '0.1.7';
+        const APP_VERSION = '0.1.8';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -592,11 +646,10 @@
         };
 
         function initApp() {
-            // 情況一：完全沒有人員資料，導向建立旅程頁面
+            // 情況一：完全沒有人員資料，導向「雙入口歡迎頁面」
             if (state.people.length === 0) { 
-                showView('setup'); 
+                showView('welcome'); 
                 toggleNav(false); 
-                setPersonCount(1); // 預設產出單人輸入框，支援個人記帳
                 return; 
             }
             
@@ -626,19 +679,53 @@
             updateSummary(); renderDays(); renderRecords(); renderMemberSummary(); updateCloudStatusUI(); updatePublicFundDashboard();
         }
 
-        // --- 產生專屬 QR Code 函式 ---
+        // --- 房間代號手動加入邏輯 ---
+        async function joinWithCode() {
+            const code = document.getElementById('join-invite-code').value.trim();
+            if (!code) { showCustomModal('alert', '請輸入或貼上房間代號！'); return; }
+            
+            try {
+                // 將代號解碼回 JSON 金鑰
+                const decodedStr = decodeURIComponent(escape(atob(code)));
+                const inviteConfig = JSON.parse(decodedStr);
+                
+                if (inviteConfig.owner && inviteConfig.repo && inviteConfig.token) {
+                    syncConfig = inviteConfig;
+                    localStorage.setItem('travel_split_sync_config', JSON.stringify({ ...syncConfig, hasUnsyncedChanges: false }));
+                    localStorage.setItem('gh_token_global', syncConfig.token);
+                    
+                    hasAutoDownloaded = true;
+                    localStorage.removeItem('travel_split_my_id');
+                    document.getElementById('join-invite-code').value = ''; // 清空輸入框
+                    
+                    // 強制觸發下載程序
+                    await downloadFromGitHub(false); 
+                } else {
+                    throw new Error('無效的代號結構');
+                }
+            } catch (e) {
+                showCustomModal('alert', '無效的房間代號！\n請確認您貼上的代碼是否完整無缺漏。');
+                console.error('代號解析失敗', e);
+            }
+        }
+
+        // --- 產生專屬 QR Code 與代號函式 ---
         function generateInviteQR() {
             const container = document.getElementById('invite-qr-container');
             const qrDiv = document.getElementById('invite-qrcode');
-            qrDiv.innerHTML = ''; // 清空舊圖片
+            const codeDisplay = document.getElementById('invite-code-display');
+            qrDiv.innerHTML = ''; 
             
             // 確保金鑰三要素皆存在才產生條碼
             if (syncConfig.owner && syncConfig.repo && syncConfig.token) {
                 const configStr = JSON.stringify(syncConfig);
-                const encodedStr = btoa(unescape(encodeURIComponent(configStr)));
+                const encodedStr = btoa(unescape(encodeURIComponent(configStr))); // 房間代號本人
                 
-                // 組合出含有 ?invite= 參數的專屬網址 (加上 encodeURIComponent 修復蘋果 Safari 解析錯誤)
+                // 1. 產生掃描用網址
                 const inviteUrl = `${window.location.origin}${window.location.pathname}?invite=${encodeURIComponent(encodedStr)}`;
+                
+                // 2. 顯示房間代號供複製
+                if(codeDisplay) codeDisplay.value = encodedStr;
                 
                 if (typeof QRCode !== 'undefined') {
                     new QRCode(qrDiv, {
@@ -655,6 +742,17 @@
             } else {
                 container.classList.add('hidden');
                 container.classList.remove('flex');
+            }
+        }
+
+        function copyInviteCode() {
+            const codeDisplay = document.getElementById('invite-code-display');
+            if (codeDisplay && codeDisplay.value) {
+                navigator.clipboard.writeText(codeDisplay.value).then(() => {
+                    showCustomModal('success', '房間代號已複製！\n您可以直接貼上至 LINE 傳給夥伴。');
+                }).catch(err => {
+                    showCustomModal('alert', '複製失敗，請手動選取文字複製。');
+                });
             }
         }
 
