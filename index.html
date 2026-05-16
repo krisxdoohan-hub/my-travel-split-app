@@ -538,19 +538,37 @@
             setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); img.src = ''; }, 300);
         }
 
+        // ═══ 除錯工具：畫面可見的 log ═══
+        const _dbgLogs = [];
+        function dbg(msg) {
+            const t = new Date().toISOString().substr(11,12);
+            _dbgLogs.push(`[${t}] ${msg}`);
+            console.log(`[DBG] ${msg}`);
+            const el = document.getElementById('_debug_overlay');
+            if (el) el.innerText = _dbgLogs.slice(-18).join('\n');
+        }
+
         window.onload = async () => {
+            const dbgDiv = document.createElement('div');
+            dbgDiv.id = '_debug_overlay';
+            dbgDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(0,0,0,0.85);color:#0f0;font-size:11px;font-family:monospace;padding:8px;max-height:45vh;overflow-y:auto;white-space:pre-wrap;pointer-events:none;';
+            document.body.appendChild(dbgDiv);
+
             document.getElementById('app-version-label').innerText = `v${APP_VERSION}`;
             
-            // --- 魔法機制：攔截並解析 QR Code 邀請網址參數 ---
             const urlParams = new URLSearchParams(window.location.search);
             const inviteCode = urlParams.get('invite');
+            dbg(`START | inviteCode存在: ${!!inviteCode}`);
+            dbg(`URL: ${window.location.href.substr(0,100)}`);
+
             if (inviteCode) {
                 try {
+                    dbg('開始解析 inviteCode...');
                     const decodedStr = decodeURIComponent(escape(atob(inviteCode)));
                     const inviteConfig = JSON.parse(decodedStr);
+                    dbg(`解析成功 | owner=${inviteConfig.owner} repo=${inviteConfig.repo} token=${inviteConfig.token ? '有' : '無'}`);
+
                     if (inviteConfig.owner && inviteConfig.repo && inviteConfig.token) {
-                        
-                        // 【蘋果 Safari 救援】：檢查是否已經綁定過相同金鑰，避免重複彈出下載視窗
                         const savedConfigStr = localStorage.getItem('travel_split_sync_config');
                         let alreadyBound = false;
                         if (savedConfigStr) {
@@ -559,6 +577,7 @@
                                 alreadyBound = true;
                             }
                         }
+                        dbg(`alreadyBound=${alreadyBound}`);
 
                         if (!alreadyBound) {
                             syncConfig = inviteConfig;
@@ -566,24 +585,30 @@
                             localStorage.setItem('gh_token_global', syncConfig.token);
                             hasAutoDownloaded = true;
                             localStorage.removeItem('travel_split_my_id');
+                            dbg('呼叫 downloadFromGitHub(false)...');
                             await downloadFromGitHub(false);
+                            dbg('downloadFromGitHub 完成');
                         } else {
-                            // 已綁定同一組金鑰，直接載入本地資料進入
+                            dbg('alreadyBound=true 直接進入');
                             loadLocalState();
                             loadSyncConfig();
                             initApp();
                         }
-                        // ✅ QR 邀請流程到此結束，絕對不往下執行 loadLocalState/initApp
+                        dbg('QR流程結束 return');
                         return;
+                    } else {
+                        dbg('警告: inviteConfig 缺少欄位');
                     }
                 } catch (e) {
+                    dbg(`錯誤: ${e.message}`);
                     console.error('邀請碼解析失敗', e);
                 }
             }
-            // --------------------------------------------------
 
+            dbg('走一般啟動流程');
             loadLocalState();
             loadSyncConfig();
+            dbg(`一般流程 people=${state.people.length}人`);
             
             const globalToken = localStorage.getItem('gh_token_global');
             if (globalToken && !syncConfig.token) syncConfig.token = globalToken;
@@ -592,6 +617,7 @@
                 hasAutoDownloaded = true;
                 await downloadFromGitHub(true); 
             }
+            dbg(`呼叫 initApp | people=${state.people.length}`);
             initApp();
         };
 
@@ -673,19 +699,24 @@
 
         // --- GitHub Repo Sync Logic ---
         async function downloadFromGitHub(isAuto = false) {
+            dbg(`downloadFromGitHub | isAuto=${isAuto}`);
             const { owner, repo, token } = syncConfig;
             if (!owner || !repo || !token) { 
+                dbg('錯誤: syncConfig不完整');
                 if (!isAuto) { showView('settings'); showCustomModal('alert', '請先完成 GitHub 雲端備份設定。'); }
                 return; 
             }
 
             try {
                 const url = `https://api.github.com/repos/${owner}/${repo}/contents/${FILE_PATH}`;
+                dbg(`fetch ${owner}/${repo}`);
                 const response = await fetch(`${url}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache' } });
-                if (response.status === 404) { if (!isAuto) showCustomModal('alert', '雲端尚未建立備份檔案，請先執行「上傳覆蓋」。'); return; }
+                dbg(`HTTP ${response.status}`);
+                if (response.status === 404) { dbg('404: 雲端無檔案'); if (!isAuto) showCustomModal('alert', '雲端尚未建立備份檔案，請先執行「上傳覆蓋」。'); return; }
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                dbg(`解析成功 | people=${content.people ? content.people.length : 'null'}人`);
                 
                 if (content && content.people) {
                     if (content.people.length === 0 && state.people.length > 0) {
@@ -697,22 +728,23 @@
                         return;
                     }
 
-                    // ✅ 無論資料有無變動，都先更新 state 和 localStorage
                     state.people = content.people;
                     state.records = content.records;
                     saveLocalState(true);
+                    dbg(`state更新 | people=${state.people.length}人`);
 
                     if (!isAuto) {
-                        // QR Code 邀請流程：顯示歡迎彈窗，按確定才進入
-                        showCustomModal('success', '已從雲端下載最新資料，歡迎加入帳本！', () => { initApp(); }, '下載完成');
+                        dbg('顯示歡迎彈窗...');
+                        showCustomModal('success', '已從雲端下載最新資料，歡迎加入帳本！', () => { dbg('按確定 → initApp'); initApp(); }, '下載完成');
                     } else {
-                        // 自動背景同步：靜默更新，直接 initApp
+                        dbg('自動同步 → initApp');
                         initApp();
                     }
+                } else {
+                    dbg('警告: content.people 為空！');
                 }
             } catch (error) { 
-                // 【Android 終極救援】：如果舊版快取管家依然陰魂不散攔截了 API 導致 Failed to fetch，
-                // 系統將自動強制重新整理網頁一次，徹底擺脫舊管家的糾纏！
+                dbg(`catch錯誤: ${error.message}`);
                 if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                     if (!sessionStorage.getItem('sw_reloaded')) {
                         sessionStorage.setItem('sw_reloaded', 'true');
