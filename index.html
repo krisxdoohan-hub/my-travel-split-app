@@ -500,7 +500,7 @@
             }
         }
 
-        const APP_VERSION = '0.2.4';
+        const APP_VERSION = '0.2.5';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -604,7 +604,6 @@
                         // ✅ 無論是否 alreadyBound，只要掃了 QR Code 就重新從雲端下載最新資料
                         syncConfig = inviteConfig;
                         hasAutoDownloaded = true;
-                        localStorage.removeItem('travel_split_my_id');
                         await downloadFromGitHub(false);
                         return;
                     }
@@ -774,7 +773,6 @@
                         localStorage.removeItem('travel_split_state');
                         localStorage.removeItem('travel_split_sync_config');
                         localStorage.removeItem('gh_token_global');
-                        localStorage.removeItem('travel_split_my_id');
                         showCustomModal('alert', '主揪已結束本次旅程並清空帳本。\n系統將自動為您清除本地紀錄並解除雲端綁定。', () => { location.reload(); }, '旅程結束');
                         return;
                     }
