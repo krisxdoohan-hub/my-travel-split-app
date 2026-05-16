@@ -461,7 +461,7 @@
             });
         }
 
-        const APP_VERSION = '0.0.7';
+        const APP_VERSION = '0.0.8';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -676,20 +676,25 @@
                         localStorage.removeItem('travel_split_sync_config');
                         localStorage.removeItem('gh_token_global');
                         localStorage.removeItem('travel_split_my_id');
-                        showCustomModal('alert', '主揪已結束本次旅程並清空帳本。\n系統將自動為您清除本地紀錄並解除雲端綁定。', () => {
-                            location.reload();
-                        }, '旅程結束');
+                        showCustomModal('alert', '主揪已結束本次旅程並清空帳本。\n系統將自動為您清除本地紀錄並解除雲端綁定。', () => { location.reload(); }, '旅程結束');
                         return;
                     }
 
-                    const isChanged = JSON.stringify(state.records) !== JSON.stringify(content.records);
-                    if (isChanged) {
+                    // 【修正重點】同時比對「明細」與「人員名單」，確保剛創立的空白帳本也能成功載入人員！
+                    const isRecordsChanged = JSON.stringify(state.records) !== JSON.stringify(content.records);
+                    const isPeopleChanged = JSON.stringify(state.people) !== JSON.stringify(content.people);
+                    
+                    if (isRecordsChanged || isPeopleChanged) {
                         state.people = content.people;
                         state.records = content.records;
                         saveLocalState(true);
                         initApp();
                     }
-                    if (!isAuto) showCustomModal('success', '已從雲端下載最新資料。', null, '下載完成');
+                    
+                    // 下載成功後，如果是掃碼進來 (isAuto=false)，按確定後強制刷新畫面進入密碼解鎖
+                    if (!isAuto) {
+                        showCustomModal('success', '已從雲端下載最新資料。', () => { initApp(); }, '下載完成');
+                    }
                 }
             } catch (error) { if (!isAuto) showCustomModal('alert', `自動同步失敗：\n${error.message}`); }
         }
