@@ -1,6 +1,6 @@
 {
   "version": "0.1.6",
-  "timestamp": "2026-05-16T15:20:32.353Z",
+  "timestamp": "2026-05-16T15:20:42.753Z",
   "people": [
     {
       "id": "0",
@@ -18,5 +18,20 @@
       "password": "3333"
     }
   ],
-  "records": []
+  "records": [
+    {
+      "id": 1778944842749,
+      "date": "2026/5/16",
+      "title": "未分類紀錄",
+      "amount": 3333,
+      "currency": "TWD",
+      "flowType": "expense",
+      "type": "multi",
+      "payMethod": "cash",
+      "payerId": "0",
+      "customSplits": null,
+      "settledIds": [],
+      "photo": null
+    }
+  ]
 }
