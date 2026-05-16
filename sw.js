@@ -3,7 +3,7 @@
  * 【終極隔離版】絕對不干涉外部 CDN 與 GitHub API 連線，徹底解決破圖與阻擋
  */
 
-const CACHE_NAME = 'travel-split-v0.1.5';
+const CACHE_NAME = 'travel-split-v0.1.6';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // 立即強制接管
