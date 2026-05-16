@@ -3,7 +3,7 @@
  * 負責離線快取與資源管理 (具備 ERR_FAILED 崩潰防護與網址參數解析)
  */
 
-const CACHE_NAME = 'travel-split-v0.0.8';
+const CACHE_NAME = 'travel-split-v0.0.9';
 
 const ASSETS_TO_CACHE = [
   './',
