@@ -1,6 +1,37 @@
 {
   "version": "0.1.6",
-  "timestamp": "2026-05-16T15:21:30.703Z",
-  "people": [],
-  "records": []
+  "timestamp": "2026-05-16T15:30:33.735Z",
+  "people": [
+    {
+      "id": "0",
+      "name": "me",
+      "password": "1111"
+    },
+    {
+      "id": "1",
+      "name": "夥伴 2",
+      "password": "2222"
+    },
+    {
+      "id": "2",
+      "name": "夥伴 3",
+      "password": "3333"
+    }
+  ],
+  "records": [
+    {
+      "id": 1778944842749,
+      "date": "2026/5/16",
+      "title": "未分類紀錄",
+      "amount": 3333,
+      "currency": "TWD",
+      "flowType": "expense",
+      "type": "multi",
+      "payMethod": "cash",
+      "payerId": "0",
+      "customSplits": null,
+      "settledIds": [],
+      "photo": null
+    }
+  ]
 }
