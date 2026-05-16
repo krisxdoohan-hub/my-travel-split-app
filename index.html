@@ -509,7 +509,7 @@
     </div>
 
     <script>
-        // 【終極決策】：徹底廢除 Service Worker，將所有快取管家強制解僱，從此根絕 Android 破圖與連線阻擋
+       // 【終極決策】：徹底廢除 Service Worker，將所有快取管家強制解僱，從此根絕 Android 破圖與連線阻擋
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
                 for(let registration of registrations) {
@@ -527,7 +527,7 @@
             }
         }
 
-        const APP_VERSION = '0.2.0';
+        const APP_VERSION = '0.2.1';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -776,39 +776,39 @@
 
         // --- GitHub Repo Sync Logic ---
 
-        // 【終極穿透裝甲】：取代脆弱的 fetch，使用最底層的 XMLHttpRequest，並強制暴力淨化所有隱藏的空白與換行字元
-        function safeGitHubApiCall(method, owner, repo, token, body = null) {
-            return new Promise((resolve, reject) => {
-                // 1. 終極殺菌：清除字串中所有可能的隱藏空白、換行、Tab，避免 URL 或 Header 瞬間損毀
-                const safeOwner = encodeURIComponent((owner || '').replace(/\s+/g, ''));
-                const safeRepo = encodeURIComponent((repo || '').replace(/\s+/g, ''));
-                const safeToken = (token || '').replace(/\s+/g, '');
-                
-                const url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}?t=${Date.now()}`;
-                const xhr = new XMLHttpRequest();
-                xhr.open(method, url, true);
-                xhr.setRequestHeader('Authorization', `Bearer ${safeToken}`);
-                xhr.setRequestHeader('Cache-Control', 'no-cache');
-                
-                if (body) xhr.setRequestHeader('Content-Type', 'application/json');
+        // 【安全網路引擎】：徹底清除隱藏空白，並精準區分「下載(加標籤防快取)」與「上傳(純淨網址防阻擋)」
+        async function safeGitHubApiCall(method, owner, repo, token, body = null) {
+            const safeOwner = encodeURIComponent((owner || '').replace(/[\s\uFEFF\xA0]+/g, ''));
+            const safeRepo = encodeURIComponent((repo || '').replace(/[\s\uFEFF\xA0]+/g, ''));
+            const safeToken = (token || '').replace(/[\s\uFEFF\xA0]+/g, '');
+            
+            let url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}`;
+            
+            // 只有 GET 下載才加時間標籤，PUT 上傳絕對維持乾淨網址
+            if (method === 'GET') {
+                url += `?t=${Date.now()}`;
+            }
 
-                xhr.onload = function() {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        resolve({ status: xhr.status, data: JSON.parse(xhr.responseText) });
-                    } else if (xhr.status === 404) {
-                        resolve({ status: 404, data: null });
-                    } else {
-                        reject(new Error(`HTTP 錯誤碼 ${xhr.status} (請確認金鑰權限是否正確)`));
-                    }
-                };
-                
-                xhr.onerror = function() {
-                    reject(new Error('網路連線遭瀏覽器強行阻擋，或房間代號內含有嚴重錯誤的不可見字元。'));
-                };
+            const options = {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${safeToken}`,
+                    'Cache-Control': 'no-cache'
+                }
+            };
 
-                if (body) xhr.send(JSON.stringify(body));
-                else xhr.send();
-            });
+            if (body) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(url, options);
+            
+            if (response.status === 404) return { status: 404, data: null };
+            if (!response.ok) throw new Error(`HTTP 錯誤碼 ${response.status}`);
+            
+            const data = await response.json();
+            return { status: response.status, data: data };
         }
 
         async function downloadFromGitHub(isAuto = false) {
@@ -818,7 +818,6 @@
             }
 
             try {
-                // 改用穿透裝甲 API 呼叫
                 const response = await safeGitHubApiCall('GET', syncConfig.owner, syncConfig.repo, syncConfig.token);
                 
                 if (response.status === 404) { 
@@ -864,7 +863,7 @@
             try {
                 let currentSha = null;
                 const getRes = await safeGitHubApiCall('GET', syncConfig.owner, syncConfig.repo, syncConfig.token);
-                if (getRes.status === 200) currentSha = getRes.data.sha;
+                if (getRes.status === 200 && getRes.data) currentSha = getRes.data.sha;
                 
                 const body = { message: "Sync from Travel Split App", content: base64Content, sha: currentSha };
                 await safeGitHubApiCall('PUT', syncConfig.owner, syncConfig.repo, syncConfig.token, body);
