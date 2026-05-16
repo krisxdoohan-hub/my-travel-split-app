@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "timestamp": "2026-05-16T11:33:36.272Z",
+  "timestamp": "2026-05-16T11:34:35.404Z",
   "people": [
     {
       "id": "0",
@@ -18,5 +18,20 @@
       "password": "2222"
     }
   ],
-  "records": []
+  "records": [
+    {
+      "id": 1778931275395,
+      "date": "2026/5/16",
+      "title": "未分類紀錄",
+      "amount": 99,
+      "currency": "JPY",
+      "flowType": "expense",
+      "type": "single",
+      "payMethod": "cash",
+      "payerId": "0",
+      "customSplits": null,
+      "settledIds": [],
+      "photo": null
+    }
+  ]
 }
