@@ -527,7 +527,7 @@
             }
         }
 
-        const APP_VERSION = '0.2.1';
+        const APP_VERSION = '0.2.2';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -775,42 +775,6 @@
         });
 
         // --- GitHub Repo Sync Logic ---
-
-        // 【安全網路引擎】：徹底清除隱藏空白，並精準區分「下載(加標籤防快取)」與「上傳(純淨網址防阻擋)」
-        async function safeGitHubApiCall(method, owner, repo, token, body = null) {
-            const safeOwner = encodeURIComponent((owner || '').replace(/[\s\uFEFF\xA0]+/g, ''));
-            const safeRepo = encodeURIComponent((repo || '').replace(/[\s\uFEFF\xA0]+/g, ''));
-            const safeToken = (token || '').replace(/[\s\uFEFF\xA0]+/g, '');
-            
-            let url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}`;
-            
-            // 只有 GET 下載才加時間標籤，PUT 上傳絕對維持乾淨網址
-            if (method === 'GET') {
-                url += `?t=${Date.now()}`;
-            }
-
-            const options = {
-                method: method,
-                headers: {
-                    'Authorization': `Bearer ${safeToken}`,
-                    'Cache-Control': 'no-cache'
-                }
-            };
-
-            if (body) {
-                options.headers['Content-Type'] = 'application/json';
-                options.body = JSON.stringify(body);
-            }
-
-            const response = await fetch(url, options);
-            
-            if (response.status === 404) return { status: 404, data: null };
-            if (!response.ok) throw new Error(`HTTP 錯誤碼 ${response.status}`);
-            
-            const data = await response.json();
-            return { status: response.status, data: data };
-        }
-
         async function downloadFromGitHub(isAuto = false) {
             if (!syncConfig.owner || !syncConfig.repo || !syncConfig.token) { 
                 if (!isAuto) { showView('settings'); showCustomModal('alert', '請先完成 GitHub 雲端備份設定。'); }
@@ -818,14 +782,28 @@
             }
 
             try {
-                const response = await safeGitHubApiCall('GET', syncConfig.owner, syncConfig.repo, syncConfig.token);
-                
+                const safeOwner = encodeURIComponent(syncConfig.owner.trim());
+                const safeRepo = encodeURIComponent(syncConfig.repo.trim());
+                const safeToken = syncConfig.token.trim();
+                const url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}`;
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${safeToken}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
                 if (response.status === 404) { 
                     if (!isAuto) showCustomModal('alert', '雲端尚未建立備份檔案，請先執行「上傳覆蓋」。'); 
                     return; 
                 }
+                if (!response.ok) throw new Error(`HTTP 錯誤碼 ${response.status}`);
 
-                const content = JSON.parse(decodeURIComponent(escape(atob(response.data.content))));
+                const data = await response.json();
+                const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
                 
                 if (content && content.people) {
                     if (content.people.length === 0 && state.people.length > 0) {
@@ -857,16 +835,51 @@
                 if (!isAuto) { showView('settings'); showCustomModal('alert', '請先完成 GitHub 雲端備份設定。'); }
                 return; 
             }
+
             const exportData = { version: APP_VERSION, timestamp: new Date().toISOString(), people: state.people, records: state.records };
             const base64Content = btoa(unescape(encodeURIComponent(JSON.stringify(exportData, null, 2))));
 
             try {
+                const safeOwner = encodeURIComponent(syncConfig.owner.trim());
+                const safeRepo = encodeURIComponent(syncConfig.repo.trim());
+                const safeToken = syncConfig.token.trim();
+                const url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}`;
+
+                const headers = {
+                    'Authorization': `Bearer ${safeToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                };
+
+                // 1. 先抓取目前檔案的 SHA 值 (若無檔案則略過)
                 let currentSha = null;
-                const getRes = await safeGitHubApiCall('GET', syncConfig.owner, syncConfig.repo, syncConfig.token);
-                if (getRes.status === 200 && getRes.data) currentSha = getRes.data.sha;
-                
-                const body = { message: "Sync from Travel Split App", content: base64Content, sha: currentSha };
-                await safeGitHubApiCall('PUT', syncConfig.owner, syncConfig.repo, syncConfig.token, body);
+                try {
+                    const getRes = await fetch(url, { method: 'GET', headers: { ...headers, 'Cache-Control': 'no-cache' } });
+                    if (getRes.ok) {
+                        const data = await getRes.json();
+                        currentSha = data.sha;
+                    }
+                } catch(e) { }
+
+                // 2. 組裝安全的上傳包裹 (絕對不可傳入 null 的 sha)
+                const bodyObj = {
+                    message: "Sync from Travel Split App",
+                    content: base64Content
+                };
+                if (currentSha) {
+                    bodyObj.sha = currentSha;
+                }
+
+                // 3. 執行覆蓋上傳
+                const putRes = await fetch(url, {
+                    method: 'PUT',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bodyObj)
+                });
+
+                if (!putRes.ok) {
+                    const errData = await putRes.json().catch(()=>({}));
+                    throw new Error(`HTTP ${putRes.status}: ${errData.message || 'API 拒絕連線'}`);
+                }
                 
                 hasUnsyncedChanges = false; saveSyncStatus(); updateCloudStatusUI();
                 if (!isAuto) showCustomModal('success', '資料已成功上傳並覆蓋雲端儲存庫。', null, '同步完成');
