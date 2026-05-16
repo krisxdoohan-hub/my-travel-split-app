@@ -1,6 +1,6 @@
 {
   "version": "0.1.1",
-  "timestamp": "2026-05-16T12:40:11.584Z",
+  "timestamp": "2026-05-16T12:40:23.414Z",
   "people": [
     {
       "id": "0",
@@ -40,7 +40,9 @@
       "payMethod": "cash",
       "payerId": "0",
       "customSplits": null,
-      "settledIds": [],
+      "settledIds": [
+        "1"
+      ],
       "photo": null
     },
     {
