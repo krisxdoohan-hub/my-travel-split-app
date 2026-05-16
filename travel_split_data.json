@@ -1,6 +1,22 @@
 {
-  "version": "0.1.5",
-  "timestamp": "2026-05-16T14:53:07.813Z",
-  "people": [],
+  "version": "0.1.6",
+  "timestamp": "2026-05-16T14:57:10.788Z",
+  "people": [
+    {
+      "id": "0",
+      "name": "夥伴 1",
+      "password": "1111"
+    },
+    {
+      "id": "1",
+      "name": "夥伴 2",
+      "password": "2222"
+    },
+    {
+      "id": "2",
+      "name": "夥伴 3",
+      "password": "3333"
+    }
+  ],
   "records": []
 }
