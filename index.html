@@ -464,7 +464,7 @@
             });
         }
 
-        const APP_VERSION = '0.1.5';
+        const APP_VERSION = '0.1.6';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -564,15 +564,17 @@
                             syncConfig = inviteConfig;
                             localStorage.setItem('travel_split_sync_config', JSON.stringify({ ...syncConfig, hasUnsyncedChanges: false }));
                             localStorage.setItem('gh_token_global', syncConfig.token);
-                            
-                            // 【核心關鍵】：移除原本的網址清除邏輯！保留 ?invite= 參數。
-                            // 這樣夥伴從 LINE 點擊「使用 Safari 開啟」時，網址才不會遺失金鑰！
-                            
                             hasAutoDownloaded = true;
                             localStorage.removeItem('travel_split_my_id');
-                            await downloadFromGitHub(false); 
-                            return;  // ← 加上這一行！讓 QR 邀請流程完全交由 downloadFromGitHub 內部的 initApp() 處理
+                            await downloadFromGitHub(false);
+                        } else {
+                            // 已綁定同一組金鑰，直接載入本地資料進入
+                            loadLocalState();
+                            loadSyncConfig();
+                            initApp();
                         }
+                        // ✅ QR 邀請流程到此結束，絕對不往下執行 loadLocalState/initApp
+                        return;
                     }
                 } catch (e) {
                     console.error('邀請碼解析失敗', e);
