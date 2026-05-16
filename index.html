@@ -623,15 +623,15 @@
                 const configStr = JSON.stringify(syncConfig);
                 const encodedStr = btoa(unescape(encodeURIComponent(configStr)));
                 
-                // 組合出含有 ?invite= 參數的專屬網址
-                const inviteUrl = `${window.location.origin}${window.location.pathname}?invite=${encodedStr}`;
+                // 組合出含有 ?invite= 參數的專屬網址 (加上 encodeURIComponent 修復蘋果 Safari 解析錯誤)
+                const inviteUrl = `${window.location.origin}${window.location.pathname}?invite=${encodeURIComponent(encodedStr)}`;
                 
                 if (typeof QRCode !== 'undefined') {
                     new QRCode(qrDiv, {
                         text: inviteUrl,
                         width: 140,
                         height: 140,
-                        colorDark : "#2563eb", // Tailwind blue-600
+                        colorDark : "#2563eb", 
                         colorLight : "#ffffff",
                         correctLevel : QRCode.CorrectLevel.L
                     });
