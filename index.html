@@ -527,7 +527,7 @@
             }
         }
 
-        const APP_VERSION = '0.1.9';
+        const APP_VERSION = '0.2.0';
         let pendingModalAction = null;
 
         // --- Core Application State ---
@@ -775,20 +775,58 @@
         });
 
         // --- GitHub Repo Sync Logic ---
+
+        // 【終極穿透裝甲】：取代脆弱的 fetch，使用最底層的 XMLHttpRequest，並強制暴力淨化所有隱藏的空白與換行字元
+        function safeGitHubApiCall(method, owner, repo, token, body = null) {
+            return new Promise((resolve, reject) => {
+                // 1. 終極殺菌：清除字串中所有可能的隱藏空白、換行、Tab，避免 URL 或 Header 瞬間損毀
+                const safeOwner = encodeURIComponent((owner || '').replace(/\s+/g, ''));
+                const safeRepo = encodeURIComponent((repo || '').replace(/\s+/g, ''));
+                const safeToken = (token || '').replace(/\s+/g, '');
+                
+                const url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/contents/${FILE_PATH}?t=${Date.now()}`;
+                const xhr = new XMLHttpRequest();
+                xhr.open(method, url, true);
+                xhr.setRequestHeader('Authorization', `Bearer ${safeToken}`);
+                xhr.setRequestHeader('Cache-Control', 'no-cache');
+                
+                if (body) xhr.setRequestHeader('Content-Type', 'application/json');
+
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve({ status: xhr.status, data: JSON.parse(xhr.responseText) });
+                    } else if (xhr.status === 404) {
+                        resolve({ status: 404, data: null });
+                    } else {
+                        reject(new Error(`HTTP 錯誤碼 ${xhr.status} (請確認金鑰權限是否正確)`));
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    reject(new Error('網路連線遭瀏覽器強行阻擋，或房間代號內含有嚴重錯誤的不可見字元。'));
+                };
+
+                if (body) xhr.send(JSON.stringify(body));
+                else xhr.send();
+            });
+        }
+
         async function downloadFromGitHub(isAuto = false) {
-            const { owner, repo, token } = syncConfig;
-            if (!owner || !repo || !token) { 
+            if (!syncConfig.owner || !syncConfig.repo || !syncConfig.token) { 
                 if (!isAuto) { showView('settings'); showCustomModal('alert', '請先完成 GitHub 雲端備份設定。'); }
                 return; 
             }
 
             try {
-                const url = `https://api.github.com/repos/${owner}/${repo}/contents/${FILE_PATH}`;
-                const response = await fetch(`${url}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache' } });
-                if (response.status === 404) { if (!isAuto) showCustomModal('alert', '雲端尚未建立備份檔案，請先執行「上傳覆蓋」。'); return; }
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                // 改用穿透裝甲 API 呼叫
+                const response = await safeGitHubApiCall('GET', syncConfig.owner, syncConfig.repo, syncConfig.token);
+                
+                if (response.status === 404) { 
+                    if (!isAuto) showCustomModal('alert', '雲端尚未建立備份檔案，請先執行「上傳覆蓋」。'); 
+                    return; 
+                }
+
+                const content = JSON.parse(decodeURIComponent(escape(atob(response.data.content))));
                 
                 if (content && content.people) {
                     if (content.people.length === 0 && state.people.length > 0) {
@@ -800,52 +838,42 @@
                         return;
                     }
 
-                    // ✅ 無論資料有無變動，都先更新 state 和 localStorage
                     state.people = content.people;
                     state.records = content.records;
                     saveLocalState(true);
 
                     if (!isAuto) {
-                        // QR Code 邀請流程：顯示歡迎彈窗，按確定才進入
                         showCustomModal('success', '已從雲端下載最新資料，歡迎加入帳本！', () => { initApp(); }, '下載完成');
                     } else {
-                        // 自動背景同步：靜默更新，直接 initApp
                         initApp();
                     }
                 }
             } catch (error) { 
-                // 【Android 終極救援】：如果舊版快取管家依然陰魂不散攔截了 API 導致 Failed to fetch，
-                // 系統將自動強制重新整理網頁一次，徹底擺脫舊管家的糾纏！
-                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                    if (!sessionStorage.getItem('sw_reloaded')) {
-                        sessionStorage.setItem('sw_reloaded', 'true');
-                        window.location.reload(true);
-                        return;
-                    }
-                }
-                if (!isAuto) showCustomModal('alert', `自動同步失敗：\n${error.message}`); 
+                if (!isAuto) showCustomModal('alert', `同步失敗：\n${error.message}`); 
             }
         }
 
         async function uploadToGitHub(isAuto = false) {
-            const { owner, repo, token } = syncConfig;
-            if (!owner || !repo || !token) { 
+            if (!syncConfig.owner || !syncConfig.repo || !syncConfig.token) { 
                 if (!isAuto) { showView('settings'); showCustomModal('alert', '請先完成 GitHub 雲端備份設定。'); }
                 return; 
             }
             const exportData = { version: APP_VERSION, timestamp: new Date().toISOString(), people: state.people, records: state.records };
-            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${FILE_PATH}`;
             const base64Content = btoa(unescape(encodeURIComponent(JSON.stringify(exportData, null, 2))));
 
             try {
                 let currentSha = null;
-                const getRes = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (getRes.ok) currentSha = (await getRes.json()).sha;
-                const putRes = await fetch(url, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: "Sync from Travel Split App", content: base64Content, sha: currentSha }) });
-                if (!putRes.ok) throw new Error(`PUT Error ${putRes.status}`);
+                const getRes = await safeGitHubApiCall('GET', syncConfig.owner, syncConfig.repo, syncConfig.token);
+                if (getRes.status === 200) currentSha = getRes.data.sha;
+                
+                const body = { message: "Sync from Travel Split App", content: base64Content, sha: currentSha };
+                await safeGitHubApiCall('PUT', syncConfig.owner, syncConfig.repo, syncConfig.token, body);
+                
                 hasUnsyncedChanges = false; saveSyncStatus(); updateCloudStatusUI();
                 if (!isAuto) showCustomModal('success', '資料已成功上傳並覆蓋雲端儲存庫。', null, '同步完成');
-            } catch (error) { if (!isAuto) showCustomModal('alert', `上傳失敗：\n${error.message}`); }
+            } catch (error) { 
+                if (!isAuto) showCustomModal('alert', `上傳失敗：\n${error.message}`); 
+            }
         }
 
         async function quickUpload() { await uploadToGitHub(true); }
